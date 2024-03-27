@@ -1,0 +1,12 @@
+#!/usr/bin/env zsh
+
+python-upgrade(){
+
+    echo "update pyenv"
+    pyenv update
+
+    echo "upgrade pythons"
+    pyenv install 3.11:latest -s
+    pyenv install 3.12:latest -s
+
+}

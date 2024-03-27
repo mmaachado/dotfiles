@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+# Alias
+alias lt='tree'
+alias .='echo $PWD'
+alias pshell='source $(poetry env info -p)/bin/activate'
+
+
+pclear () {
+   podman rmi $(podman images -qa) -f
+   podman system prune --all --force
+   podman rmi --all
+   podman network prune -f
+}
