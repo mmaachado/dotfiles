@@ -26,6 +26,10 @@
 .emacs.d/eln-cache
 .emacs.d/elpa
 .emacs.d/emojis
+.emacs.d/config/dashboard-config.el~
+.emacs.d/config/gui-config.el~
+.emacs.d/config/markdown-config.el~
+.emacs.d/config/melpa-config.el~
 .emacs.d/enit.el~
 .emacs.d/projectile-bookmarks.eld
 .emacs.d/recentf
