@@ -319,6 +319,8 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    '(lsp-ui lsp-pyright yasnippet which-key vterm-toggle use-package try spaceline projectile neotree move-text markdown-mode magit lv flycheck-inline ergoemacs-mode emojify dracula-theme diff-hl dashboard counsel company centaur-tabs auto-complete all-the-icons ace-window))
+ '(wakatime-api-key "")
+ '(wakatime-cli-path "~/.wakatime/wakatime-cli")
  '(warning-suppress-types '((use-package) (use-package) (use-package))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
