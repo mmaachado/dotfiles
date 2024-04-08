@@ -31,6 +31,7 @@
 .emacs.d/config/markdown-config.el~
 .emacs.d/config/melpa-config.el~
 .emacs.d/enit.el~
+.emacs.d/enit.el
 .emacs.d/projectile-bookmarks.eld
 .emacs.d/recentf
 .emacs.d/snippets
@@ -47,6 +48,9 @@
 .python_history
 .ssh/
 .sudo_as_admin_successful
+.wakatime/
+.wget-hsts
+.wakatime.bdb
 Downloads/
 Desktop/
 Documents/
@@ -55,3 +59,4 @@ Pictures/
 Public/
 Templates/
 Videos/
+
