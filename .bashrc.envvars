@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-export GITDIR="/home/mmachado/git"
-export PIPEWIRE_LATENCY=128/48000
-# export DOCKER_HOST="unix:///run/podman/podman.sock"

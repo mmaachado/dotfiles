@@ -10,9 +10,11 @@ alias pshell='source $(poetry env info -p)/bin/activate'
 alias ipv4="ip addr show | grep 'inet ' | grep -v '127.0.0.1' | cut -d' ' -f6 | cut -d/ -f1"
 alias ipv6="ip addr show | grep 'inet6 ' | cut -d ' ' -f6 | sed -n '2p'"
 
-pclear () {
-   podman rmi $(podman images -qa) -f
-   podman system prune --all --force
-   podman rmi --all
-   podman network prune -f
-}
+# remove unused dependencies
+alias rem='orphans=$(pacman -Qdtq); [ -z "$orphans" ] && echo "There are no orphaned packages" || sudo pacman -Rsc $orphans'
+
+# source bashrc
+alias src="source ~/.bashrc && echo '.bashrc sourced!'"
+
+# print errors from boot
+alias error='journalctl -b -p err'

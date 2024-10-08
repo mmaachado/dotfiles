@@ -23,7 +23,7 @@ disabled = false
 # An alternative to the username module which displays a symbol that
 # represents the current operating system
 [os]
-symbols.Debian = '  '
+symbols.Arch = ' '
 disabled = false
 
 [directory]
@@ -35,7 +35,7 @@ symbol = " "
 format = 'via [ $symbol ($version) ]($style)'
 
 [docker_context]
-symbol = "🐳 "
+symbol = " "
 format = '[ $symbol $context ]($style)'
 
 [git_branch]
