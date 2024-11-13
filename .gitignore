@@ -4,4 +4,5 @@
 # except these
 !.gitignore
 !.config/starship.toml
-
+!.config/hypr
+!.config/waybar
