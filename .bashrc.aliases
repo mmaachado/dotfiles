@@ -14,7 +14,7 @@ alias ipv6="ip addr show | grep 'inet6 ' | cut -d ' ' -f6 | sed -n '2p'"
 alias rem='orphans=$(pacman -Qdtq); [ -z "$orphans" ] && echo "There are no orphaned packages" || sudo pacman -Rsc $orphans'
 
 # source bashrc
-alias src="source ~/.bashrc && echo '.bashrc sourced!'"
+alias src="clear && source ~/.bashrc"
 
 # print errors from boot
 alias error='journalctl -b -p err'
