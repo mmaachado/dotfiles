@@ -4,5 +4,6 @@
 # except these
 !.gitignore
 !.config/starship.toml
-!.config/hypr
-!.config/waybar
+!.bashrc
+!.bashrc.aliases
+!.bashrc.python_env
