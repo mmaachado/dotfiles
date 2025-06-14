@@ -18,4 +18,6 @@ if [ -e ~/.bashrc.aliases ] ; then
    source ~/.bashrc.aliases
 fi
 
+complete -cf sudo
+
 neofetch
