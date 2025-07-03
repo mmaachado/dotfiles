@@ -6,6 +6,7 @@ $username\
 $directory\
 $git_branch\
 $git_status\
+$git_commit\
 $c\
 $nodejs\
 $python\
@@ -23,7 +24,7 @@ disabled = false
 # An alternative to the username module which displays a symbol that
 # represents the current operating system
 [os]
-symbols.Arch = ' '
+symbols.Arch = '󰣇 '
 disabled = false
 
 [directory]
@@ -35,18 +36,27 @@ symbol = " "
 format = 'via [ $symbol ($version) ]($style)'
 
 [docker_context]
-symbol = " "
+symbol = " "
 format = '[ $symbol $context ]($style)'
 
 [git_branch]
-symbol = " "
+symbol = " "
 format = '[ $symbol $branch ]($style)'
 
 [git_status]
+conflicted = "󱓌 "
+ahead = " ×${count} "
+behind = " ×${count} "
+style = "bright-white"
+# format = "$all_status$ahead_behind"
 format = '[$all_status$ahead_behind ]($style)'
 
+[git_commit]
+commit_hash_length = 8
+style = "bold white"
+
 [nodejs]
-symbol = " "
+symbol = " "
 format = 'via [ $symbol ($version) ]($style)'
 
 [python]

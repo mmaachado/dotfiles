@@ -18,6 +18,11 @@ if [ -e ~/.bashrc.aliases ] ; then
    source ~/.bashrc.aliases
 fi
 
+# scripts
+if [ -e ~/.bashrc.scripts ] ; then
+   source ~/.bashrc.scripts
+fi
+
 complete -cf sudo
 
 neofetch

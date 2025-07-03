@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/bash
 
 alias lt='tree'
 alias .='echo $PWD'
@@ -15,3 +15,9 @@ alias src="clear && source ~/.bashrc"
 
 # print errors from boot
 alias error='journalctl -b -p err'
+
+# show latest Arch Linux news
+alias pacnews="arch_news_check"
+
+# short zed
+alias zed="zeditor"
