@@ -6,4 +6,4 @@
 !.config/starship.toml
 !.bashrc
 !.bashrc.aliases
-!.bashrc.python_env
+!.bashrc.scripts
