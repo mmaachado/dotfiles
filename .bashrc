@@ -23,6 +23,10 @@ if [ -e ~/.bashrc.scripts ] ; then
    source ~/.bashrc.scripts
 fi
 
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
 complete -cf sudo
 
 neofetch
