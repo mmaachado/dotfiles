@@ -8,6 +8,28 @@
 #      | head -n 5 \
 #      | sed 's|^|https://archlinux.org|'
 #}
+#
+
+pacman_updates(){
+    # pacman -Sy >/dev/null
+
+    updates=$(pacman -Qu | wc -l)
+
+    if (( updates == 0 )); then
+        echo "${cl3}󰮯 \n \n ${cl5}󰊠 \n \n ${cl2}󰊠  \n \n ${cl6}󰊠  \n \n ${cl4}󰊠  \n \n ${cl1}󰊠  \n \n ${cl7}󰊠  \n \n ${cl0}󰊠  \n \n"
+    else
+        output="󰮯 "
+        if (( updates > 1 && updates <= 5 )); then
+            for ((i=2; i<=updates; i++)); do
+                output="${output}• "
+            done
+        elif (( updates > 5 )); then
+            output+="• • • • • • • • 󰊠"
+        fi
+        echo "$output ($updates updates)"
+    fi
+
+}
 
 arch_news_check() {
     echo $'\e[0;34m:: 󰮯 \e[1;37mArch Linux News:\e[m'
