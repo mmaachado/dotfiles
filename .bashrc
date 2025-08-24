@@ -29,4 +29,4 @@ export NVM_DIR="$HOME/.nvm"
 
 complete -cf sudo
 
-neofetch
+neofetch --ascii /home/marques/gengar.txt
