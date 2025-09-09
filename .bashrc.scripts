@@ -13,7 +13,7 @@
 pacman_updates(){
     # pacman -Sy >/dev/null
 
-    updates=$(pacman -Qu | wc -l)
+    updates=$(checkupdates | wc -l)
 
     if (( updates == 0 )); then
         echo "${cl3}󰮯 \n \n ${cl5}󰊠 \n \n ${cl2}󰊠  \n \n ${cl6}󰊠  \n \n ${cl4}󰊠  \n \n ${cl1}󰊠  \n \n ${cl7}󰊠  \n \n ${cl0}󰊠  \n \n"

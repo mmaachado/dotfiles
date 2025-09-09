@@ -20,4 +20,5 @@ alias error='journalctl -b -p err'
 alias pacnews="arch_news_check"
 
 # short zed
-alias zed="zeditor"
+#alias zed="zeditor"
+alias zed="env -u WAYLAND_DISPLAY zeditor" # fix for zed bug with nvidia 580 driver
