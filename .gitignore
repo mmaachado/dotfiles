@@ -4,7 +4,8 @@
 # except these
 !.gitignore
 !.config/starship.toml
+!.config/neofetch/
+!.config/neofetch/config.conf
 !.bashrc
 !.bashrc.aliases
 !.bashrc.scripts
-!.config/neofetch
