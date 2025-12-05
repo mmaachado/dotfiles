@@ -23,11 +23,16 @@ if [ -e ~/.bashrc.scripts ] ; then
    source ~/.bashrc.scripts
 fi
 
-
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
+# pnpm
+export PNPM_HOME="/home/marques/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end
+
 complete -cf sudo
-
-
 neofetch
