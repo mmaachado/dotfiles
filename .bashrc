@@ -36,3 +36,8 @@ esac
 
 complete -cf sudo
 neofetch
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/home/marques/.lmstudio/bin"
+# End of LM Studio CLI section
+
