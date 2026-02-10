@@ -10,26 +10,34 @@
 #}
 #
 
-pacman_updates(){
-    # pacman -Sy >/dev/null
+pacman_updates() {
+    cache="${XDG_CACHE_HOME:-$HOME/.cache}/pacman_updates"
+    ttl=900  # 15 min
 
-    updates=$(checkupdates | wc -l)
-
-    if (( updates == 0 )); then
-        echo "${cl3}󰮯 \n \n ${cl5}󰊠 \n \n ${cl2}󰊠  \n \n ${cl6}󰊠  \n \n ${cl4}󰊠  \n \n ${cl1}󰊠  \n \n ${cl7}󰊠  \n \n ${cl0}󰊠  \n \n"
+    if [[ -f $cache ]] && (( $(date +%s) - $(stat -c %Y "$cache") < ttl )); then
+        count=$(<"$cache")
     else
-        output="󰮯 "
-        if (( updates > 1 && updates <= 5 )); then
-            for ((i=2; i<=updates; i++)); do
-                output="${output}• "
-            done
-        elif (( updates > 5 )); then
-            output+="• • • • • • • • 󰊠"
-        fi
-        echo "$output ($updates updates)"
+        mapfile -t u < <(checkupdates 2>/dev/null)
+        count=${#u[@]}
+        echo "$count" > "$cache"
     fi
 
+    if (( count == 0 )); then
+        echo "${cl3}󰮯 \n \n ${cl5}󰊠 \n \n ${cl2}󰊠 \n \n ${cl6}󰊠 \n \n ${cl4}󰊠 \n \n ${cl1}󰊠 \n \n ${cl7}󰊠 \n \n ${cl0}󰊠"
+        return
+    fi
+
+    output="󰮯 "
+    if (( count <= 5 )); then
+        printf -v dots '• %.0s' $(seq 1 "$count")
+        output+="$dots"
+    else
+        output+="• • • • • • • • 󰊠"
+    fi
+
+    echo "$output ($count updates)"
 }
+
 
 arch_news_check() {
     echo $'\e[0;34m:: 󰮯 \e[1;37mArch Linux News:\e[m'
