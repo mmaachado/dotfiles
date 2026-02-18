@@ -24,7 +24,7 @@ disabled = false
 # An alternative to the username module which displays a symbol that
 # represents the current operating system
 [os]
-symbols.Arch = '󰣇 '
+symbols.Pop = "   "
 disabled = false
 
 [directory]
@@ -40,7 +40,7 @@ symbol = " "
 format = '[ $symbol $context ]($style)'
 
 [git_branch]
-symbol = " "
+symbol = " "
 format = '[ $symbol $branch ]($style)'
 
 [git_status]
@@ -60,5 +60,5 @@ symbol = " "
 format = 'via [ $symbol ($version) ]($style)'
 
 [python]
-symbol = '🐍 '
+symbol = ' '
 format = 'via [${symbol}${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
