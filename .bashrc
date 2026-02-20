@@ -140,6 +140,9 @@ if [ -e ~/.bashrc.aliases ] ; then
    source ~/.bashrc.aliases
 fi
 
+# releases
+source ~/env
+
 eval "$(starship init bash)"
 
 export NVM_DIR="$HOME/.nvm"
