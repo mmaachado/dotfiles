@@ -1,10 +1,9 @@
 #!/usr/bin/bash
 
 alias lt='tree'
-alias dot="echo '$PWD'"
-alias ll='ls -l'
-alias la='ls -A'
-alias l='ls -CF'
+alias ll='lsd -l'
+alias la='lsd -A'
+alias l='lsd -F'
 
 # IPv4 (non-loopback)
 alias ipv4="ip -4 -o addr show scope global | awk '{print \$4}' | cut -d/ -f1"
@@ -16,6 +15,9 @@ alias rem='sudo apt autoremove --purge -y'
 
 # source bashrc
 alias src='clear && source "$HOME/.bashrc"'
+
+# update && upgrade
+alias up='sudo apt update && sudo apt upgrade -y'
 
 # print errors from boot
 alias error='journalctl -b -p err'
