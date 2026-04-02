@@ -141,7 +141,7 @@ if [ -e ~/.bashrc.aliases ] ; then
 fi
 
 # releases
-source ~/env
+# source ~/env
 
 eval "$(starship init bash)"
 
@@ -155,10 +155,5 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 # pnpm end
-
-. "$HOME/.atuin/bin/env"
-
-[[ -f ~/.bash-preexec.sh ]] && source ~/.bash-preexec.sh
-eval "$(atuin init bash)"
 
 neofetch
