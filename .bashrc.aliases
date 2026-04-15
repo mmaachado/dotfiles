@@ -1,23 +1,24 @@
 #!/usr/bin/bash
 
 alias lt='tree'
-alias ll='lsd -l'
-alias la='lsd -A'
-alias l='lsd -F'
+alias .='echo $PWD'
 
-# IPv4 (non-loopback)
-alias ipv4="ip -4 -o addr show scope global | awk '{print \$4}' | cut -d/ -f1"
-# IPv6 (global, first)
-alias ipv6="ip -6 -o addr show scope global | awk '{print \$4}' | cut -d/ -f1 | head -n1"
+# print IPv4/IPv6 address
+alias ipv4="ip addr show | grep 'inet ' | grep -v '127.0.0.1' | cut -d' ' -f6 | cut -d/ -f1"
+alias ipv6="ip addr show | grep 'inet6 ' | cut -d ' ' -f6 | sed -n '2p'"
 
 # remove unused dependencies
-alias rem='sudo apt autoremove --purge -y'
+alias rem='orphans=$(pacman -Qdtq); [ -z "$orphans" ] && echo "There are no orphaned packages" || sudo pacman -Rsc $orphans'
 
 # source bashrc
-alias src='clear && source "$HOME/.bashrc"'
-
-# update && upgrade
-alias up='sudo apt update && sudo apt upgrade -y'
+alias src="clear && source ~/.bashrc"
 
 # print errors from boot
 alias error='journalctl -b -p err'
+
+# show latest Arch Linux news
+alias pacnews="arch_news_check"
+
+# short zed
+#alias zed="zeditor"
+alias zed="env -u WAYLAND_DISPLAY zeditor" # fix for zed bug with nvidia 580 driver

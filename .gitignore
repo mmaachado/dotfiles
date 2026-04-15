@@ -1,11 +1,19 @@
 # ignore everything
 *
 
-# except these
+# allow dirs (necessário para traversal)
+!.config/
+!.config/zsh/
+!.config/fastfetch/
+!.local/
+!.local/bin/
+
+# allow files
 !.gitignore
+!.zshrc
 !.config/starship.toml
-!.config/neofetch/
-!.config/neofetch/config.conf
-!.bashrc
-!.bashrc.aliases
-!.bashrc.scripts
+
+# allow contents
+!.config/zsh/**
+!.config/fastfetch/**
+!.local/bin/**

@@ -1,0 +1,58 @@
+{
+  "logo": {
+    "type": "builtin",
+    "source": "arch_small",
+  },
+
+  "display": {
+    "separator": "  ",
+  },
+
+  "modules": [
+    {
+      "type": "custom",
+      "format": "┌───────── Hardware Information ─────────┐",
+    },
+
+    { "type": "host", "key": " 󰌢 " },
+    { "type": "cpu", "key": " 󰍛 " },
+    { "type": "gpu", "key": " 󰘚 " },
+    { "type": "memory", "key": " 󰑭 " },
+    { "type": "display", "key": " 󰍹 " },
+
+    {
+      "type": "command",
+      "key": " 󱈑 ",
+      "text": "cat /sys/class/power_supply/BAT0/capacity 2>/dev/null | awk '{printf \"%s%%\", $1}'",
+    },
+
+    {
+      "type": "custom",
+      "format": "├───────── Software Information ─────────┤",
+    },
+
+    { "type": "os", "key": "  " },
+    { "type": "kernel", "key": "  " },
+    { "type": "shell", "key": "  " },
+    { "type": "terminalfont", "key": "  " },
+    { "type": "packages", "key": " 󰊠 " },
+    { "type": "uptime", "key": " 󰅐 " },
+
+    {
+      "type": "command",
+      "key": "  ",
+      "text": "grep 'NVRM version' /proc/driver/nvidia/version 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i==\"for\") print $(i+2)}'",
+    },
+
+    {
+      "type": "command",
+      "key": "   ",
+      "text": "pacman_updates",
+    },
+
+    {
+      "type": "custom",
+      "format": "└───────────────────────────────────────┘",
+    },
+  ],
+}

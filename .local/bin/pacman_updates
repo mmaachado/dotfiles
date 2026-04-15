@@ -1,0 +1,24 @@
+#!/usr/bin/env zsh
+
+cache="${XDG_CACHE_HOME:-$HOME/.cache}/pacman_updates"
+ttl=900
+
+if [[ -f $cache ]] && (( $(date +%s) - $(stat -c %Y "$cache") < ttl )); then
+    count=$(<"$cache")
+else
+    u=("${(@f)$(checkupdates 2>/dev/null)}")
+    count=${#u[@]}
+    echo "$count" > "$cache"
+fi
+
+if (( count == 0 )); then
+    echo "󰮯 no updates"
+    exit 0
+fi
+
+if (( count <= 5 )); then
+    dots=$(printf '• %.0s' $(seq 1 "$count"))
+    echo "󰮯 $dots ($count updates)"
+else
+    echo "󰮯 • • • • • • • • 󰊠 ($count updates)"
+fi
