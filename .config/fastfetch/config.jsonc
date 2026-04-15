@@ -18,7 +18,7 @@
     { "type": "cpu", "key": " 󰍛 " },
     { "type": "gpu", "key": " 󰘚 " },
     { "type": "memory", "key": " 󰑭 " },
-    { "type": "display", "key": " 󰍹 " },
+    // { "type": "display", "key": " 󰍹 " },
 
     {
       "type": "command",
@@ -34,7 +34,7 @@
     { "type": "os", "key": "  " },
     { "type": "kernel", "key": "  " },
     { "type": "shell", "key": "  " },
-    { "type": "terminalfont", "key": "  " },
+    // { "type": "terminalfont", "key": "  " },
     { "type": "packages", "key": " 󰊠 " },
     { "type": "uptime", "key": " 󰅐 " },
 

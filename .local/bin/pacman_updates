@@ -6,8 +6,7 @@ ttl=900
 if [[ -f $cache ]] && (( $(date +%s) - $(stat -c %Y "$cache") < ttl )); then
     count=$(<"$cache")
 else
-    u=("${(@f)$(checkupdates 2>/dev/null)}")
-    count=${#u[@]}
+    count=$(checkupdates 2>/dev/null | grep -c '^[^[:space:]]')
     echo "$count" > "$cache"
 fi
 
