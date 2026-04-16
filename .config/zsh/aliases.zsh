@@ -9,9 +9,6 @@ alias lt='tree'
 alias ipv4="ip addr show | grep 'inet ' | grep -v '127.0.0.1' | awk '{print \$2}' | cut -d/ -f1"
 alias ipv6="ip addr show | grep 'inet6 ' | awk '{print \$2}' | sed -n '2p'"
 
-# remove unused dependencies
-alias rem='orphans=$(pacman -Qdtq 2>/dev/null); [[ -z "$orphans" ]] && echo "No orphans" || sudo pacman -Rsc $orphans'
-
 # reload zsh config
 alias src="clear && source ~/.zshrc"
 
