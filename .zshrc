@@ -16,6 +16,8 @@ export NVM_DIR="$HOME/.nvm"
 export PNPM_HOME="$HOME/.local/share/pnpm"
 [[ ":$PATH:" != *":$PNPM_HOME:"* ]] && export PATH="$PNPM_HOME:$PATH"
 
+export PATH="$HOME/tools/node-v14.15.4-linux-x64/bin:$PATH"
+
 eval "$(starship init zsh)"
 
 fastfetch

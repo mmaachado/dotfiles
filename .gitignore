@@ -6,7 +6,7 @@
 !.config/zsh/
 !.config/fastfetch/
 !.local/
-!.local/bin/
+!.local/bin/pacman_updates
 
 # allow files
 !.gitignore
