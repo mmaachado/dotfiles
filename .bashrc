@@ -35,9 +35,5 @@ esac
 # pnpm end
 
 complete -cf sudo
-neofetch
-
-# Added by LM Studio CLI (lms)
-export PATH="$PATH:/home/marques/.lmstudio/bin"
-# End of LM Studio CLI section
-
+fastfetch
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
