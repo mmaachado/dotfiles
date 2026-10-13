@@ -58,5 +58,14 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             screenName: root.screenName
         }
+
+        IconButton {
+            anchors.horizontalCenter: parent.horizontalCenter
+            icon: "system-shutdown-symbolic"
+            iconSize: 20
+            tooltip: "Power"
+            active: Visibilities.session
+            onClicked: Visibilities.toggle("session", root.screenName)
+        }
     }
 }
