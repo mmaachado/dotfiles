@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+# kshell — switch between Plasma panels and the KShell (Quickshell) shell.
+#   kshell enable    remove Plasma panels, start KShell, autostart it, Meta → launcher
+#   kshell disable   stop KShell and put the Plasma panels back
+#   kshell restart   restart KShell
+#   kshell ipc ...   e.g. `kshell ipc launcher toggle`
+set -euo pipefail
+
+CONFIG=kshell
+APPLETSRC="$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
+STATE="$HOME/.local/share/kshell"
+BACKUP="$STATE/panels-backup.appletsrc"
+AUTOSTART="$HOME/.config/autostart/kshell.desktop"
+SHORTCUTS="$HOME/.config/quickshell/$CONFIG/bridge/shortcuts.py"
+
+plasma_js() { qdbus6 org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "$1"; }
+
+start() {
+    pgrep -u "$USER" -f "(qs|quickshell) -c $CONFIG" >/dev/null && return
+    setsid -f qs -c "$CONFIG" >/dev/null 2>&1
+}
+
+stop() { qs -c "$CONFIG" kill >/dev/null 2>&1 || true; }
+
+enable() {
+    command -v qs >/dev/null || { echo "quickshell is not installed: sudo pacman -S quickshell" >&2; exit 1; }
+    mkdir -p "$STATE" "$(dirname "$AUTOSTART")"
+    if [[ $(plasma_js 'print(panels().length)') != 0 ]]; then
+        cp "$APPLETSRC" "$BACKUP"
+        echo "Backed up Plasma layout to $BACKUP"
+        plasma_js 'panels().forEach(p => p.remove())' >/dev/null
+        echo "Removed Plasma panels"
+    fi
+    cat > "$AUTOSTART" <<DESK
+[Desktop Entry]
+Type=Application
+Name=KShell
+Comment=Quickshell-based shell on top of Plasma
+Exec=qs -c $CONFIG
+X-KDE-autostart-phase=2
+DESK
+    start
+    # The KShell shortcuts are registered by the bridge's KWin script; wait for it.
+    for _ in $(seq 20); do
+        qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.isScriptLoaded "$(cat "${XDG_RUNTIME_DIR:-/tmp}/kshell/plugin" 2>/dev/null)" 2>/dev/null | grep -q true && break
+        sleep 0.25
+    done
+    python3 -I "$SHORTCUTS" kshell
+    echo "KShell enabled (Meta opens the launcher)"
+}
+
+disable() {
+    stop
+    rm -f "$AUTOSTART"
+    python3 -I "$SHORTCUTS" plasma
+    if [[ -f $BACKUP && $(plasma_js 'print(panels().length)') == 0 ]]; then
+        kquitapp6 plasmashell || true
+        # Merge only the panel containments back so desktop-widget changes made
+        # since enabling are kept.
+        python3 - "$BACKUP" "$APPLETSRC" <<'PY'
+import re, sys
+def groups(text):
+    out, cur = [], None
+    for line in text.splitlines():
+        if line.startswith("["):
+            cur = [line, []]; out.append(cur)
+        elif cur is not None:
+            cur[1].append(line)
+    return out
+backup, current = (open(p).read() for p in sys.argv[1:])
+bg = groups(backup)
+panels = {m.group(1) for h, body in bg
+          if (m := re.fullmatch(r"\[Containments\]\[(\d+)\]", h)) and "plugin=org.kde.panel" in body}
+existing = {h for h, _ in groups(current)}
+add = [(h, b) for h, b in bg
+       if (m := re.match(r"\[Containments\]\[(\d+)\]", h)) and m.group(1) in panels and h not in existing]
+with open(sys.argv[2], "a") as f:
+    for h, b in add:
+        f.write("\n" + h + "\n" + "\n".join(l for l in b if l.strip()) + "\n")
+print(f"Restored {len(panels)} panel(s)")
+PY
+        kstart plasmashell >/dev/null 2>&1
+    fi
+    echo "KShell disabled, Plasma panels restored"
+}
+
+case "${1:-}" in
+    enable) enable ;;
+    disable) disable ;;
+    restart) stop; sleep 0.5; start ;;
+    ipc) shift; qs -c "$CONFIG" ipc call "$@" ;;
+    *) sed -n '2,7p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
+esac
