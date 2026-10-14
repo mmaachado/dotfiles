@@ -149,7 +149,7 @@ Item {
                             color: Appearance.colors.primary
 
                             SequentialAnimation on height {
-                                running: notch.playing && root.t === 0
+                                running: notch.playing && root.t === 0 && Appearance.motion > 0
                                 loops: Animation.Infinite
                                 NumberAnimation { to: 14 - eqBar.index * 3; duration: 260 + eqBar.index * 90; easing.type: Easing.InOutSine }
                                 NumberAnimation { to: 5; duration: 300 + eqBar.index * 70; easing.type: Easing.InOutSine }

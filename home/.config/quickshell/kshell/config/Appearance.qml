@@ -2,11 +2,26 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 
 // Every colour comes from the active KDE colour scheme / accent colour, so the
 // shell follows System Settings → Colors & Themes (including accent-from-wallpaper).
 Singleton {
     id: root
+
+    // KDE's animation speed (System Settings → General Behavior). 0 = no animations.
+    property real motion: 1
+
+    FileView {
+        path: Quickshell.env("HOME") + "/.config/kdeglobals"
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: {
+            const m = text().match(/^AnimationDurationFactor=([\d.]+)/m);
+            root.motion = m ? parseFloat(m[1]) : 1;
+        }
+        onLoadFailed: root.motion = 1
+    }
 
     readonly property SystemPalette palette: SystemPalette { colorGroup: SystemPalette.Active }
 
@@ -48,9 +63,9 @@ Singleton {
     }
 
     readonly property QtObject anim: QtObject {
-        readonly property int fast: 150
-        readonly property int normal: 300
-        readonly property int slow: 450
+        readonly property int fast: Math.round(150 * root.motion)
+        readonly property int normal: Math.round(300 * root.motion)
+        readonly property int slow: Math.round(450 * root.motion)
         // Material 3 "emphasized" curves
         readonly property var enter: [0.05, 0.7, 0.1, 1, 1, 1]
         readonly property var exit: [0.3, 0, 0.8, 0.15, 1, 1]

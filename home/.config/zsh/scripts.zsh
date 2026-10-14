@@ -1,35 +1,3 @@
-# pacman updates counter
-pacman_updates() {
-    local cache="${XDG_CACHE_HOME:-$HOME/.cache}/pacman_updates"
-    local ttl=900
-    local count
-
-    if [[ -f $cache ]] && (( $(date +%s) - $(stat -c %Y "$cache") < ttl )); then
-        count=$(<"$cache")
-    else
-        local u
-        u=("${(@f)$(checkupdates 2>/dev/null)}")
-        count=${#u[@]}
-        echo "$count" > "$cache"
-    fi
-
-    if (( count == 0 )); then
-        echo "󰮯 no updates"
-        return
-    fi
-
-    local output="󰮯 "
-    if (( count <= 5 )); then
-        local dots
-        dots=$(printf '• %.0s' $(seq 1 "$count"))
-        output+="$dots"
-    else
-        output+="• • • • • • • • 󰊠"
-    fi
-
-    echo "$output ($count updates)"
-}
-
 # Arch Linux news
 arch_news_check() {
     echo $'\e[0;34m:: 󰮯 \e[1;37mArch Linux News:\e[m'

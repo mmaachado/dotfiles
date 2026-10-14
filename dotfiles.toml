@@ -1,0 +1,54 @@
+[packages.core]
+description = "zsh shell, prompt and CLI tools"
+repo = [
+    "zsh",
+    "starship",
+    "fastfetch",
+    "tree",
+    "curl",
+    "git",
+    "pacman-contrib",
+    "ttf-jetbrains-mono-nerd",
+]
+
+[packages.kshell]
+description = "KShell: the Quickshell layer on top of KDE Plasma"
+repo = [
+    "quickshell",
+    "python-gobject",
+    "qt6-tools",
+    "kconfig",
+    "kde-cli-tools",
+    "kdbusaddons",
+    "networkmanager",
+    "pipewire",
+    "wireplumber",
+    "upower",
+    "plasma-workspace",
+]
+
+[packages.optional]
+description = "Nice to have: zsh plugins and Bluetooth"
+optional = true
+repo = [
+    "zsh-autosuggestions",
+    "zsh-syntax-highlighting",
+    "bluez",
+    "bluez-utils",
+]
+aur = []
+
+[links]
+paths = [
+    ".zshrc",
+    ".zprofile",
+    ".config/zsh",
+    ".config/starship.toml",
+    ".config/fastfetch",
+    ".config/quickshell/kshell",
+    ".local/bin/kshell",
+    ".local/bin/pacman_updates",
+]
+
+[wallpapers]
+dir = "~/Pictures/Wallpapers"

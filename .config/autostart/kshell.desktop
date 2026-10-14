@@ -1,6 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=KShell
-Comment=Quickshell-based shell on top of Plasma
-Exec=qs -c kshell
-X-KDE-autostart-phase=2

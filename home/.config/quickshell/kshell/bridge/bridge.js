@@ -52,6 +52,7 @@ function ipc(cmd) {
 }
 registerShortcut("KShell Launcher", "KShell: Toggle app launcher", "Meta+Space", ipc("launcher toggle"));
 registerShortcut("KShell Dashboard", "KShell: Toggle dashboard", "Meta+Alt+D", ipc("dashboard toggle"));
+registerShortcut("KShell Wallpapers", "KShell: Toggle wallpaper picker", "Meta+W", ipc("wallpapers toggle"));
 registerShortcut("KShell Session", "KShell: Toggle session menu", "", ipc("session toggle"));
 
 push();

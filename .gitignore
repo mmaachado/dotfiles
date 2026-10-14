@@ -1,32 +1,3 @@
-# ignore everything
-*
-
-# allow dirs (necessário para traversal)
-!.config/
-!.config/zsh/
-!.config/fastfetch/
-!.local/
-!.local/bin/pacman_updates
-
-# allow files
-!.gitignore
-!.zshrc
-!.config/starship.toml
-
-# allow contents
-!.config/zsh/**
-!.config/fastfetch/**
-!.local/bin/**
-
-# KShell — Quickshell shell on top of KDE Plasma
-!.config/quickshell/
-!.config/quickshell/kshell/
-!.config/quickshell/kshell/**
-.config/quickshell/kshell/**/__pycache__/
-!.config/autostart/
-!.config/autostart/kshell.desktop
-# .local/bin: allow listed scripts only (keeps binaries like claude/uv out)
-!.local/bin/
-.local/bin/*
-!.local/bin/pacman_updates
-!.local/bin/kshell
+__pycache__/
+*.pyc
+.venv/

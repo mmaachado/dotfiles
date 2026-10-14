@@ -1,14 +1,12 @@
+# ~/.zshrc — interactive zsh
 [[ $- != *i* ]] && return
 
 export PATH="$HOME/.local/bin:$PATH"
 
-eval "$(starship init zsh)"
-
-autoload -Uz compinit
-compinit
-
-[[ -f ~/.config/zsh/aliases.zsh ]] && source ~/.config/zsh/aliases.zsh
-[[ -f ~/.config/zsh/scripts.zsh ]] && source ~/.config/zsh/scripts.zsh
+for f in options aliases scripts; do
+    [[ -f ~/.config/zsh/$f.zsh ]] && source ~/.config/zsh/$f.zsh
+done
+unset f
 
 export NVM_DIR="$HOME/.nvm"
 [[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"

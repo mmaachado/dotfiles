@@ -10,11 +10,12 @@ Singleton {
     property bool launcher
     property bool dashboard
     property bool session
+    property bool wallpapers
     property bool dnd
     // Name of the screen the drawers open on (empty = any)
     property string screen: ""
 
-    readonly property bool anyOpen: launcher || dashboard || session
+    readonly property bool anyOpen: launcher || dashboard || session || wallpapers
 
     function toggle(name: string, screenName: string): void {
         const was = root[name];
@@ -37,6 +38,7 @@ Singleton {
         launcher = false;
         dashboard = false;
         session = false;
+        wallpapers = false;
     }
 
     Connections {
@@ -58,6 +60,10 @@ Singleton {
     IpcHandler {
         target: "session"
         function toggle(): void { root.toggle("session", ""); }
+    }
+    IpcHandler {
+        target: "wallpapers"
+        function toggle(): void { root.toggle("wallpapers", ""); }
     }
     IpcHandler {
         target: "drawers"

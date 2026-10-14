@@ -34,7 +34,7 @@ Scope {
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.namespace: "kshell"
         WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.keyboardFocus: root.drawerOpen && (Visibilities.launcher || Visibilities.session)
+        WlrLayershell.keyboardFocus: root.drawerOpen && (Visibilities.launcher || Visibilities.session || Visibilities.wallpapers)
             ? WlrKeyboardFocus.Exclusive : root.drawerOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
         mask: root.drawerOpen ? fullRegion : idleRegion
@@ -116,6 +116,19 @@ Scope {
 
                 Launcher {
                     open: Visibilities.launcher && root.here
+                }
+            }
+
+            Drawer {
+                edge: "bottom"
+                open: Visibilities.wallpapers && root.here
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: Appearance.sizes.border
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.horizontalCenterOffset: Appearance.sizes.barWidth / 2 - Appearance.sizes.border / 2
+
+                WallpaperPicker {
+                    open: Visibilities.wallpapers && root.here
                 }
             }
 
