@@ -1,6 +1,5 @@
 import QtQuick
 import Quickshell
-import Quickshell.Widgets
 import qs.components
 import qs.config
 import qs.services
@@ -54,102 +53,26 @@ Item {
             width: parent.width
             height: 230
 
-            PathView {
+            Carousel {
                 id: view
                 anchors.fill: parent
                 visible: count > 0
                 model: root.shown
-                pathItemCount: Math.min(7, count)
-                preferredHighlightBegin: 0.5
-                preferredHighlightEnd: 0.5
-                highlightRangeMode: PathView.StrictlyEnforceRange
-                highlightMoveDuration: Appearance.anim.normal
-                snapMode: PathView.SnapToItem
 
-                path: Path {
-                    startX: 0
-                    startY: view.height / 2
-                    PathAttribute { name: "itemScale"; value: 0.68 }
-                    PathAttribute { name: "itemZ"; value: 0 }
-                    PathAttribute { name: "itemOpacity"; value: 0.45 }
-                    PathLine { x: view.width / 2; y: view.height / 2 }
-                    PathAttribute { name: "itemScale"; value: 1 }
-                    PathAttribute { name: "itemZ"; value: 10 }
-                    PathAttribute { name: "itemOpacity"; value: 1 }
-                    PathLine { x: view.width; y: view.height / 2 }
-                    PathAttribute { name: "itemScale"; value: 0.68 }
-                    PathAttribute { name: "itemZ"; value: 0 }
-                    PathAttribute { name: "itemOpacity"; value: 0.45 }
-                }
-
-                delegate: Item {
+                delegate: CarouselCard {
                     id: card
                     required property string modelData
-                    required property int index
-                    readonly property bool centred: PathView.isCurrentItem
-                    readonly property bool applied: modelData === Wallpapers.current
+                    checked: modelData === Wallpapers.current
+                    onActivated: root.apply(modelData)
 
-                    width: 320
-                    height: 200
-                    z: PathView.itemZ ?? 0
-                    scale: PathView.itemScale ?? 1
-                    opacity: PathView.itemOpacity ?? 1
-
-                    ClippingRectangle {
+                    Image {
                         anchors.fill: parent
-                        radius: Appearance.sizes.radius
-                        color: Appearance.colors.surfaceHigh
-
-                        Image {
-                            anchors.fill: parent
-                            source: Wallpapers.url(card.modelData)
-                            fillMode: Image.PreserveAspectCrop
-                            asynchronous: true
-                            cache: true
-                            sourceSize.width: 480
-                        }
+                        source: Wallpapers.url(card.modelData)
+                        fillMode: Image.PreserveAspectCrop
+                        asynchronous: true
+                        cache: true
+                        sourceSize.width: 480
                     }
-
-                    // Focus ring on the centred card (keyboard position).
-                    Rectangle {
-                        anchors.fill: parent
-                        anchors.margins: -4
-                        radius: Appearance.sizes.radius + 4
-                        color: "transparent"
-                        border.width: 3
-                        border.color: Appearance.colors.primary
-                        visible: card.centred
-                    }
-
-                    Rectangle {
-                        visible: card.applied
-                        anchors.top: parent.top
-                        anchors.right: parent.right
-                        anchors.margins: 10
-                        width: 28
-                        height: 28
-                        radius: 14
-                        color: Appearance.colors.primary
-
-                        Icon {
-                            anchors.centerIn: parent
-                            name: "checkmark-symbolic"
-                            size: 16
-                            color: Appearance.colors.onPrimary
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: card.centred ? root.apply(card.modelData) : (view.currentIndex = card.index)
-                    }
-                }
-
-                WheelHandler {
-                    acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-                    onWheel: event => (event.angleDelta.y || event.angleDelta.x) > 0
-                        ? view.decrementCurrentIndex() : view.incrementCurrentIndex()
                 }
             }
 

@@ -25,6 +25,7 @@ repo = [
     "wireplumber",
     "upower",
     "plasma-workspace",
+    "kvantum",
 ]
 
 [packages.optional]
@@ -45,6 +46,7 @@ paths = [
     ".config/zsh",
     ".config/starship.toml",
     ".config/fastfetch",
+    ".config/kitty/kitty.conf",
     ".config/quickshell/kshell",
     ".local/bin/kshell",
     ".local/bin/pacman_updates",

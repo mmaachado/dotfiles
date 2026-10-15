@@ -34,10 +34,55 @@ Scope {
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.namespace: "kshell"
         WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.keyboardFocus: root.drawerOpen && (Visibilities.launcher || Visibilities.session || Visibilities.wallpapers)
+        WlrLayershell.keyboardFocus: root.drawerOpen && (Visibilities.launcher || Visibilities.session || Visibilities.wallpapers || Visibilities.themes)
             ? WlrKeyboardFocus.Exclusive : root.drawerOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
         mask: root.drawerOpen ? fullRegion : idleRegion
+
+        // Blur themes: KWin blurs behind the frame and open drawers.
+        BackgroundEffect.blurRegion: Appearance.blur ? blurRegion : null
+
+        Region {
+            id: blurRegion
+
+            // Frame = whole screen minus the rounded hole.
+            Region {
+                item: content
+                Region {
+                    intersection: Intersection.Subtract
+                    x: Appearance.sizes.barWidth
+                    y: Appearance.sizes.border
+                    width: win.width - Appearance.sizes.barWidth - Appearance.sizes.border
+                    height: win.height - 2 * Appearance.sizes.border
+                    radius: Appearance.sizes.rounding
+                }
+            }
+            Region {
+                item: island.bodyItem
+                bottomLeftRadius: island.cornerRadius
+                bottomRightRadius: island.cornerRadius
+            }
+            Region {
+                item: launcherDrawer.body
+                topLeftRadius: Appearance.sizes.rounding
+                topRightRadius: Appearance.sizes.rounding
+            }
+            Region {
+                item: wallpaperDrawer.body
+                topLeftRadius: Appearance.sizes.rounding
+                topRightRadius: Appearance.sizes.rounding
+            }
+            Region {
+                item: themeDrawer.body
+                topLeftRadius: Appearance.sizes.rounding
+                topRightRadius: Appearance.sizes.rounding
+            }
+            Region {
+                item: sessionDrawer.body
+                topLeftRadius: Appearance.sizes.rounding
+                bottomLeftRadius: Appearance.sizes.rounding
+            }
+        }
 
         Region {
             id: fullRegion
@@ -107,6 +152,7 @@ Scope {
             }
 
             Drawer {
+                id: launcherDrawer
                 edge: "bottom"
                 open: Visibilities.launcher && root.here
                 anchors.bottom: parent.bottom
@@ -120,6 +166,7 @@ Scope {
             }
 
             Drawer {
+                id: wallpaperDrawer
                 edge: "bottom"
                 open: Visibilities.wallpapers && root.here
                 anchors.bottom: parent.bottom
@@ -133,6 +180,21 @@ Scope {
             }
 
             Drawer {
+                id: themeDrawer
+                edge: "bottom"
+                open: Visibilities.themes && root.here
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: Appearance.sizes.border
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.horizontalCenterOffset: Appearance.sizes.barWidth / 2 - Appearance.sizes.border / 2
+
+                ThemePicker {
+                    open: Visibilities.themes && root.here
+                }
+            }
+
+            Drawer {
+                id: sessionDrawer
                 edge: "right"
                 open: Visibilities.session && root.here
                 anchors.right: parent.right

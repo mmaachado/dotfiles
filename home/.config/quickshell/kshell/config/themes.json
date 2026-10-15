@@ -1,0 +1,84 @@
+{
+  "_comment": "KShell themes. bridge/themes.py turns each palette into a KDE colour scheme, a Kvantum theme (blur themes) and kitty colours. RGB values. Blur themes: blurStrength = KWin blur strength (1-15, KWin default 10), appTranslucency = % of Qt app window opacity removed.",
+  "themes": [
+    {
+      "id": "slate",
+      "name": "Slate",
+      "dark": true,
+      "blur": false,
+      "plasmaStyle": "MacVentura-Dark",
+      "palette": {
+        "window": [54, 54, 54],
+        "windowAlt": [66, 66, 66],
+        "view": [36, 36, 36],
+        "viewAlt": [48, 48, 48],
+        "button": [101, 101, 101],
+        "buttonAlt": [77, 77, 77],
+        "header": [54, 54, 54],
+        "headerInactive": [45, 45, 45],
+        "tooltip": [51, 51, 51],
+        "text": [222, 222, 222],
+        "textInactive": [136, 136, 136],
+        "accent": [49, 91, 239]
+      }
+    },
+    {
+      "id": "light",
+      "name": "Light",
+      "dark": false,
+      "blur": false,
+      "palette": {
+        "window": [236, 234, 229],
+        "windowAlt": [228, 226, 221],
+        "view": [246, 245, 242],
+        "viewAlt": [238, 236, 232],
+        "button": [250, 249, 247],
+        "buttonAlt": [240, 238, 234],
+        "header": [230, 228, 223],
+        "headerInactive": [224, 222, 217],
+        "tooltip": [246, 245, 242],
+        "text": [43, 43, 43],
+        "textInactive": [112, 112, 112],
+        "accent": [49, 91, 239]
+      }
+    },
+    {
+      "id": "dark",
+      "name": "Dark",
+      "dark": true,
+      "blur": false,
+      "palette": {
+        "window": [18, 18, 18],
+        "windowAlt": [28, 28, 28],
+        "view": [24, 24, 24],
+        "viewAlt": [32, 32, 32],
+        "button": [42, 42, 42],
+        "buttonAlt": [50, 50, 50],
+        "header": [18, 18, 18],
+        "headerInactive": [14, 14, 14],
+        "tooltip": [30, 30, 30],
+        "text": [230, 230, 230],
+        "textInactive": [140, 140, 140],
+        "accent": [49, 91, 239]
+      }
+    },
+    {
+      "id": "blur-dark",
+      "name": "Blurred Dark",
+      "dark": true,
+      "blur": true,
+      "base": "dark",
+      "blurStrength": 8,
+      "appTranslucency": 32
+    },
+    {
+      "id": "blur-light",
+      "name": "Blurred Light",
+      "dark": false,
+      "blur": true,
+      "base": "light",
+      "blurStrength": 8,
+      "appTranslucency": 28
+    }
+  ]
+}

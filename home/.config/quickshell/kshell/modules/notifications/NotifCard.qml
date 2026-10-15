@@ -17,7 +17,7 @@ Rectangle {
     implicitWidth: 380
     implicitHeight: content.implicitHeight + 24
     radius: Appearance.sizes.radius
-    color: popup ? Appearance.colors.frame : Appearance.colors.surface
+    color: popup ? Appearance.colors.popup : Appearance.colors.surface
     border.width: notif.urgency === NotificationUrgency.Critical ? 2 : 0
     border.color: Appearance.colors.error
 

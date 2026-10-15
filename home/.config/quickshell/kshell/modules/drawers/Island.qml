@@ -37,6 +37,8 @@ Item {
 
     // ── Hover to open, leave to close (only if hover opened it) ──────
     property bool openedByHover: false
+    readonly property Item bodyItem: body
+    readonly property real cornerRadius: shape.rr
 
     HoverHandler {
         id: hover

@@ -23,16 +23,43 @@ Singleton {
         onLoadFailed: root.motion = 1
     }
 
+    // Active KShell theme (written by bridge/themes.py). Blur themes make the
+    // shell translucent and ask KWin to blur behind it.
+    property bool blur: false
+
+    FileView {
+        path: Quickshell.env("HOME") + "/.local/state/kshell/theme.json"
+        printErrors: false // absent until the first theme is applied
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: {
+            try {
+                root.blur = JSON.parse(text()).blur === true;
+            } catch (e) {
+                root.blur = false;
+            }
+        }
+        onLoadFailed: root.blur = false
+    }
+
     readonly property SystemPalette palette: SystemPalette { colorGroup: SystemPalette.Active }
 
+    // Layer a tint over the window colour: opaque normally, a translucent
+    // overlay in blur themes (so the blurred background shows through).
+    function layer(over: color, amount: real): color {
+        return root.blur ? Qt.alpha(over, amount) : Qt.tint(root.palette.window, Qt.alpha(over, amount));
+    }
+
     readonly property QtObject colors: QtObject {
-        readonly property color frame: root.palette.window
-        readonly property color surface: Qt.tint(root.palette.window, Qt.alpha(root.palette.windowText, 0.05))
-        readonly property color surfaceHigh: Qt.tint(root.palette.window, Qt.alpha(root.palette.windowText, 0.10))
+        readonly property color frame: root.blur ? Qt.alpha(root.palette.window, 0.62) : root.palette.window
+        // Things floating over the desktop without a blurred frame behind them.
+        readonly property color popup: root.blur ? Qt.alpha(root.palette.window, 0.92) : root.palette.window
+        readonly property color surface: root.layer(root.palette.windowText, 0.06)
+        readonly property color surfaceHigh: root.layer(root.palette.windowText, 0.11)
         readonly property color surfaceHighest: Qt.tint(root.palette.window, Qt.alpha(root.palette.windowText, 0.16))
         readonly property color primary: root.palette.highlight
         readonly property color onPrimary: root.palette.highlightedText
-        readonly property color primaryContainer: Qt.tint(root.palette.window, Qt.alpha(root.palette.highlight, 0.28))
+        readonly property color primaryContainer: root.layer(root.palette.highlight, 0.3)
         readonly property color text: root.palette.windowText
         readonly property color textDim: Qt.alpha(root.palette.windowText, 0.65)
         readonly property color textFaint: Qt.alpha(root.palette.windowText, 0.35)

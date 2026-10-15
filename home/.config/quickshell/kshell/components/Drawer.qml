@@ -16,6 +16,8 @@ Item {
     property real progress: open ? 1 : 0
     readonly property real depth: (contentDepth + Appearance.sizes.padding * 2) * progress
     readonly property bool shown: progress > 0
+    // The drawer body without its fillets (used for the blur region).
+    readonly property Item body: bodyItem
 
     Behavior on progress {
         NumberAnimation {
@@ -39,6 +41,7 @@ Item {
     // Clip region = drawer body (excluding fillets); content is pinned to the
     // outer side so it slides in with the drawer.
     Item {
+        id: bodyItem
         clip: true
         x: root.horizontal ? root.r : 0
         y: root.horizontal ? 0 : root.r
