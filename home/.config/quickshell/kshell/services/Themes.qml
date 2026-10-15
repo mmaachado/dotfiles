@@ -25,7 +25,12 @@ Singleton {
         watchChanges: true
         onFileChanged: reload()
         onLoaded: {
-            const themes = JSON.parse(text()).themes;
+            let themes;
+            try {
+                themes = JSON.parse(text()).themes;
+            } catch (e) {
+                return; // empty mid-write; the next change reloads it
+            }
             const byId = {};
             for (const t of themes)
                 byId[t.id] = t;

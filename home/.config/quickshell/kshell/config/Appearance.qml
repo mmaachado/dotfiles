@@ -42,6 +42,10 @@ Singleton {
         onLoadFailed: root.blur = false
     }
 
+    // Blur the wallpaper and desktop while an app window has focus
+    // (modules/Backdrop.qml). Skipped while a window is fullscreen.
+    readonly property bool backdropBlur: true
+
     readonly property SystemPalette palette: SystemPalette { colorGroup: SystemPalette.Active }
 
     // Layer a tint over the window colour: opaque normally, a translucent

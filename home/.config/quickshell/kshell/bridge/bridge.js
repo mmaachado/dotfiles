@@ -20,6 +20,8 @@ function info(w) {
         cls: w.resourceClass || "",
         desktops: w.onAllDesktops ? [] : arr(w.desktops).map(d => d.id),
         minimized: w.minimized,
+        fullscreen: w.fullScreen,
+        output: w.output ? w.output.name : "",
         active: w === workspace.activeWindow,
     };
 }
@@ -35,7 +37,7 @@ function push() {
 }
 
 function hook(w) {
-    for (const s of ["captionChanged", "minimizedChanged", "desktopsChanged", "skipTaskbarChanged", "outputChanged"])
+    for (const s of ["captionChanged", "minimizedChanged", "desktopsChanged", "skipTaskbarChanged", "outputChanged", "fullScreenChanged"])
         if (w[s]) w[s].connect(push);
 }
 

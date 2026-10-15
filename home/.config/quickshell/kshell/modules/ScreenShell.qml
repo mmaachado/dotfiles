@@ -25,6 +25,10 @@ Scope {
         screen: root.modelData
     }
 
+    Backdrop {
+        screen: root.modelData
+    }
+
     PanelWindow {
         id: win
 

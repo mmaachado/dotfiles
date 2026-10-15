@@ -15,12 +15,23 @@ SHORTCUTS="$HOME/.config/quickshell/$CONFIG/bridge/shortcuts.py"
 
 plasma_js() { qdbus6 org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "$1"; }
 
+# Anchored, so shells whose command line merely mentions it don't match.
+PATTERN="^(qs|quickshell) -c $CONFIG( |\$)"
+
 start() {
-    pgrep -u "$USER" -f "(qs|quickshell) -c $CONFIG" >/dev/null && return
+    pgrep -u "$USER" -f "$PATTERN" >/dev/null && return
     setsid -f qs -c "$CONFIG" >/dev/null 2>&1
 }
 
-stop() { qs -c "$CONFIG" kill >/dev/null 2>&1 || true; }
+stop() {
+    qs -c "$CONFIG" kill >/dev/null 2>&1 || true
+    # Quickshell can hang on exit; don't leave a half-dead instance behind.
+    for _ in 1 2 3 4 5; do
+        pgrep -u "$USER" -f "$PATTERN" >/dev/null || return 0
+        sleep 0.2
+    done
+    pkill -9 -u "$USER" -f "$PATTERN" || true
+}
 
 enable() {
     command -v qs >/dev/null || { echo "quickshell is not installed: sudo pacman -S quickshell" >&2; exit 1; }
