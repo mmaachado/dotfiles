@@ -37,7 +37,7 @@ arch_news_check() {
 }
 
 rem() {
-  local orphans=("${(@f)$(pacman -Qdtq 2>/dev/null)}")
+  local -a orphans=(${(f)"$(pacman -Qdtq 2>/dev/null)"})
   (( ${#orphans[@]} == 0 )) && { echo "No orphans"; return; }
   sudo pacman -Rsc "${orphans[@]}"
 }
