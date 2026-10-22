@@ -7,12 +7,28 @@ import Quickshell.Io
 // Wallpapers from ~/Pictures/Wallpapers. Plasma still owns the wallpaper:
 // applying goes through plasma-apply-wallpaperimage, and the current one is
 // read back from Plasma's config.
+//
+// Every screen's WallpaperTransition floods from what it shows to `target`
+// (the wallpaper being previewed in the picker, else `current`). Plasma is
+// only told once the flood has finished, so its own crossfade happens out of
+// sight underneath the overlay.
 Singleton {
     id: root
+
+    // Emitted when a wallpaper is applied; screens call commit(to) once
+    // their flood towards it is done.
+    signal changing(to: string)
+    property string pending: ""
 
     readonly property string dir: Quickshell.env("HOME") + "/Pictures/Wallpapers"
     property list<string> files: []
     property string current: ""
+    // What Plasma actually shows.
+    property string applied: ""
+    // Wallpaper highlighted in the picker, shown on the desktop until applied
+    // or the picker closes.
+    property string preview: ""
+    readonly property string target: preview || current
     property bool scanned: false
 
     function refresh(): void {
@@ -21,8 +37,39 @@ Singleton {
     }
 
     function apply(path: string): void {
-        Quickshell.execDetached(["plasma-apply-wallpaperimage", path]);
+        // Set current before clearing preview so `target` never flips back.
         root.current = path;
+        root.preview = "";
+        if (path === root.applied && !root.pending)
+            return;
+        root.pending = path;
+        root.changing(path);
+        fallback.restart();
+    }
+
+    // Hand the wallpaper to Plasma. Several screens may call this; only the
+    // first call for the pending wallpaper does anything.
+    function commit(path: string): void {
+        if (path !== root.pending)
+            return;
+        root.pending = "";
+        root.applied = path;
+        fallback.stop();
+        Quickshell.execDetached(["plasma-apply-wallpaperimage", path]);
+    }
+
+    // qs ipc call wallpaper set /path/to/image.jpg
+    IpcHandler {
+        target: "wallpaper"
+        function set(path: string): void { root.apply(path); }
+        function get(): string { return root.current; }
+    }
+
+    // In case no transition runs (e.g. an image fails to load).
+    Timer {
+        id: fallback
+        interval: 8000
+        onTriggered: root.commit(root.pending)
     }
 
     function name(path: string): string {
@@ -57,8 +104,10 @@ Singleton {
         onFileChanged: reload()
         onLoaded: {
             const m = text().match(/\[org\.kde\.image\]\[General\][^\[]*?\nImage=([^\n]+)/);
-            if (m)
-                root.current = decodeURIComponent(m[1].replace(/^file:\/\//, ""));
+            if (m && !root.pending) {
+                root.applied = decodeURIComponent(m[1].replace(/^file:\/\//, ""));
+                root.current = root.applied;
+            }
         }
     }
 }

@@ -40,10 +40,32 @@ Singleton {
         Quickshell.execDetached(["kstart", "--application", app.id]);
     }
 
-    // Best-effort icon for a window reported by KWin.
+    // Desktop entry for an id, window class or app name. Some apps (Electron
+    // ones like GitHub Desktop) report a class such as "GitHub Desktop" that
+    // Quickshell's heuristic can't match, so also try a slug of it and the
+    // entries' names / StartupWMClass.
+    function lookup(key: string): DesktopEntry {
+        const apps = DesktopEntries.applications.values; // re-evaluate when entries load
+        if (!key)
+            return null;
+        const slug = key.toLowerCase().replace(/\s+/g, "-");
+        const k = key.toLowerCase();
+        return DesktopEntries.byId(key) || DesktopEntries.byId(slug) || DesktopEntries.heuristicLookup(key)
+            || apps.find(a => a.startupClass.toLowerCase() === k || a.name.toLowerCase() === k) || null;
+    }
+
+    // Desktop entry for a window reported by KWin.
+    function entryFor(win: var): DesktopEntry {
+        return (win.appId && DesktopEntries.byId(win.appId)) || lookup(win.cls);
+    }
+
+    // Best-effort icon for a window.
     function iconFor(win: var): string {
-        void DesktopEntries.applications.values; // re-evaluate when entries load
-        const entry = (win.appId && DesktopEntries.byId(win.appId)) || DesktopEntries.heuristicLookup(win.cls);
-        return entry?.icon || win.appId || win.cls || "application-x-executable";
+        return entryFor(win)?.icon || win.appId || win.cls || "application-x-executable";
+    }
+
+    // App name for a window ("Firefox", "kitty"), not its title.
+    function nameFor(win: var): string {
+        return entryFor(win)?.name || win.cls || win.appId || win.title;
     }
 }

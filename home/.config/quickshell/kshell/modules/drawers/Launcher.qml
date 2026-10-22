@@ -5,7 +5,8 @@ import qs.config
 import qs.services
 
 // App launcher. Type to search, ↑/↓ to select, Enter to launch,
-// Tab to hand the query over to KRunner, Esc to close.
+// Tab to hand the query over to KRunner, Esc to close. Right-click an app
+// to pin/unpin it in the bar.
 Item {
     id: root
 
@@ -69,7 +70,7 @@ Item {
             Column {
                 anchors.left: appIcon.right
                 anchors.leftMargin: 14
-                anchors.right: parent.right
+                anchors.right: pin.left
                 anchors.rightMargin: 12
                 anchors.verticalCenter: parent.verticalCenter
 
@@ -87,9 +88,26 @@ Item {
                 }
             }
 
+            Icon {
+                id: pin
+                anchors.right: parent.right
+                anchors.rightMargin: 16
+                anchors.verticalCenter: parent.verticalCenter
+                name: "view-pin-symbolic"
+                size: 16
+                color: Appearance.colors.primary
+                visible: Dock.isPinned(row.modelData.id)
+            }
+
             StateLayer {
                 radius: Appearance.sizes.radius
-                onClicked: root.launch(row.modelData)
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                onClicked: mouse => {
+                    if (mouse.button === Qt.RightButton)
+                        Dock.togglePin(row.modelData.id);
+                    else
+                        root.launch(row.modelData);
+                }
                 onContainsMouseChanged: if (containsMouse) list.currentIndex = row.index
             }
         }
@@ -150,7 +168,7 @@ Item {
             StyledText {
                 anchors.verticalCenter: parent.verticalCenter
                 visible: input.text === ""
-                text: `Search ${Apps.all.length} apps…`
+                text: `Search ${Apps.all.length} apps…   right-click to pin`
                 color: Appearance.colors.textFaint
                 font.pointSize: Appearance.font.large
             }

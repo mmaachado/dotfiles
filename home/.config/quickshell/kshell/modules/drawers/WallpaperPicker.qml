@@ -5,7 +5,8 @@ import qs.config
 import qs.services
 
 // Wallpaper carousel. ←/→ (or scroll) to browse, type to filter, Enter or a
-// click on the centred image to apply, Esc to close.
+// click on the centred image to apply, Esc to close. The highlighted wallpaper
+// is previewed on the desktop once you stop on it.
 Item {
     id: root
 
@@ -23,7 +24,19 @@ Item {
             Wallpapers.refresh();
             centreOnCurrent();
             input.forceActiveFocus();
+        } else {
+            previewDelay.stop();
+            Wallpapers.preview = "";
         }
+    }
+
+    onSelectedChanged: if (open) previewDelay.restart()
+
+    // Only preview where browsing stops, not every wallpaper scrolled past.
+    Timer {
+        id: previewDelay
+        interval: 350
+        onTriggered: Wallpapers.preview = root.selected
     }
 
     function centreOnCurrent(): void {

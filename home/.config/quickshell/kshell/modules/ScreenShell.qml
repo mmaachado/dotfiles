@@ -26,7 +26,13 @@ Scope {
     }
 
     Backdrop {
+        id: backdrop
         screen: root.modelData
+    }
+
+    WallpaperTransition {
+        screen: root.modelData
+        blurred: backdrop.shown
     }
 
     PanelWindow {

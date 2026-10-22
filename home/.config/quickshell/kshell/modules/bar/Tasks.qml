@@ -18,6 +18,14 @@ Pill {
         Item {
             id: task
             required property var modelData
+            required property int index
+            // The first and last highlights reach out to the pill's rounded
+            // ends instead of leaving a gap inside them.
+            readonly property bool first: index === 0
+            readonly property bool last: index === Dock.groups.length - 1
+            readonly property real inset: (root.width - width) / 2
+            readonly property real topRadius: first ? root.radius : Appearance.sizes.radiusSmall
+            readonly property real bottomRadius: last ? root.radius : Appearance.sizes.radiusSmall
             readonly property int count: modelData.windows.length
             readonly property bool active: modelData.windows.some(w => w.active)
             readonly property bool minimized: count > 0 && modelData.windows.every(w => w.minimized)
@@ -48,10 +56,22 @@ Pill {
                 }
             }
 
-            Rectangle {
+            Item {
+                id: highlight
                 anchors.fill: parent
-                radius: Appearance.sizes.radiusSmall
-                color: task.active ? Appearance.colors.primaryContainer : "transparent"
+                anchors.topMargin: task.first ? -root.padding : 0
+                anchors.bottomMargin: task.last ? -root.padding : 0
+                anchors.leftMargin: task.first || task.last ? -task.inset : 0
+                anchors.rightMargin: task.first || task.last ? -task.inset : 0
+
+                Rectangle {
+                    anchors.fill: parent
+                    topLeftRadius: task.topRadius
+                    topRightRadius: task.topRadius
+                    bottomLeftRadius: task.bottomRadius
+                    bottomRightRadius: task.bottomRadius
+                    color: task.active ? Appearance.colors.primaryContainer : "transparent"
+                }
             }
 
             Icon {
@@ -63,7 +83,9 @@ Pill {
 
             StateLayer {
                 id: layer
-                radius: Appearance.sizes.radiusSmall
+                parent: highlight
+                topRadius: task.topRadius
+                bottomRadius: task.bottomRadius
                 acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
                 onClicked: mouse => {
                     if (mouse.button === Qt.MiddleButton)
@@ -76,7 +98,7 @@ Pill {
             }
 
             Tooltip {
-                text: Dock.name(task.modelData) + (task.modelData.pinned ? "" : "  ·  right-click to pin")
+                text: Dock.name(task.modelData) + (task.modelData.pinned ? "  ·  right-click to unpin" : "  ·  right-click to pin")
                 shown: tip.shown
             }
 

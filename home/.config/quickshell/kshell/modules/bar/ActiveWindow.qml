@@ -3,7 +3,7 @@ import qs.components
 import qs.config
 import qs.services
 
-// Active window icon + vertical title (like Caelestia's bar).
+// Active window icon + vertical app name (like Caelestia's bar).
 Column {
     id: root
 
@@ -29,7 +29,7 @@ Column {
             anchors.centerIn: parent
             width: parent.height
             rotation: 90
-            text: root.win?.title ?? ""
+            text: root.win ? Apps.nameFor(root.win) : ""
             color: Appearance.colors.textDim
             horizontalAlignment: Text.AlignHCenter
         }

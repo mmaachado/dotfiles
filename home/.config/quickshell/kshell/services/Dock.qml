@@ -5,7 +5,8 @@ import Quickshell
 import Quickshell.Io
 
 // Pinned apps + running windows grouped by app, like Plasma's icon task manager.
-// Pins live in config/pinned.json (right-click an icon in the bar to pin/unpin).
+// Pins live in config/pinned.json (right-click an icon in the bar or launcher
+// to pin/unpin).
 Singleton {
     id: root
 
@@ -32,15 +33,12 @@ Singleton {
     // Reading `applications` makes callers' bindings re-evaluate once the
     // (asynchronously loaded) desktop-entry database is ready.
     function entry(id: string): DesktopEntry {
-        void DesktopEntries.applications.values;
-        return DesktopEntries.byId(id) ?? DesktopEntries.heuristicLookup(id);
+        return Apps.lookup(id);
     }
 
     // Desktop-file id for a KWin window, so windows match their pinned launcher.
     function appKey(win: var): string {
-        void DesktopEntries.applications.values;
-        const e = (win.appId && DesktopEntries.byId(win.appId)) || DesktopEntries.heuristicLookup(win.cls);
-        return norm(e?.id || win.appId || win.cls);
+        return norm(Apps.entryFor(win)?.id || win.appId || win.cls);
     }
 
     function icon(group: var): string {
@@ -68,7 +66,12 @@ Singleton {
         Bridge.activate(ws[(i + 1) % ws.length].id);
     }
 
+    function isPinned(id: string): bool {
+        return root.pinned.includes(norm(id));
+    }
+
     function togglePin(id: string): void {
+        id = norm(id);
         root.pinned = root.pinned.includes(id) ? root.pinned.filter(p => p !== id) : [...root.pinned, id];
         file.setText(JSON.stringify(root.pinned, null, 2) + "\n");
     }

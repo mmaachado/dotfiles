@@ -7,6 +7,8 @@ MouseArea {
 
     property color tint: Appearance.colors.text
     property real radius: parent?.radius ?? 0
+    property real topRadius: radius
+    property real bottomRadius: radius
 
     anchors.fill: parent
     hoverEnabled: true
@@ -14,7 +16,10 @@ MouseArea {
 
     Rectangle {
         anchors.fill: parent
-        radius: root.radius
+        topLeftRadius: root.topRadius
+        topRightRadius: root.topRadius
+        bottomLeftRadius: root.bottomRadius
+        bottomRightRadius: root.bottomRadius
         color: root.tint
         opacity: !root.enabled ? 0 : root.pressed ? 0.16 : root.containsMouse ? 0.08 : 0
 
