@@ -1,12 +1,13 @@
 [
   "systemsettings",
-  "kitty",
   "org.kde.discover",
   "org.kde.dolphin",
-  "firefox",
   "github-desktop",
   "discord",
   "spotify-launcher",
   "com.microsoft.VSCode",
-  "steam"
+  "steam",
+  "firefox",
+  "obsidian",
+  "kitty"
 ]

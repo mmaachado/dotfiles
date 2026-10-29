@@ -21,6 +21,11 @@ function info(w) {
         desktops: w.onAllDesktops ? [] : arr(w.desktops).map(d => d.id),
         minimized: w.minimized,
         fullscreen: w.fullScreen,
+        maximized: w.maximizeMode === 3, // MaximizeFull
+        x: Math.round(w.frameGeometry.x),
+        y: Math.round(w.frameGeometry.y),
+        width: Math.round(w.frameGeometry.width),
+        height: Math.round(w.frameGeometry.height),
         output: w.output ? w.output.name : "",
         active: w === workspace.activeWindow,
     };
@@ -37,8 +42,13 @@ function push() {
 }
 
 function hook(w) {
-    for (const s of ["captionChanged", "minimizedChanged", "desktopsChanged", "skipTaskbarChanged", "outputChanged", "fullScreenChanged"])
+    for (const s of ["captionChanged", "minimizedChanged", "desktopsChanged", "skipTaskbarChanged", "outputChanged", "fullScreenChanged", "maximizedChanged", "interactiveMoveResizeFinished"])
         if (w[s]) w[s].connect(push);
+    // Geometry (for the notch merging into a top bar): skip the stream of
+    // updates during an interactive drag; interactiveMoveResizeFinished sends
+    // the final position.
+    if (w.frameGeometryChanged)
+        w.frameGeometryChanged.connect(() => { if (!w.move && !w.resize) push(); });
 }
 
 arr(workspace.windowList()).forEach(hook);
@@ -56,6 +66,7 @@ registerShortcut("KShell Launcher", "KShell: Toggle app launcher", "Meta+Space",
 registerShortcut("KShell Dashboard", "KShell: Toggle dashboard", "Meta+Alt+D", ipc("dashboard toggle"));
 registerShortcut("KShell Wallpapers", "KShell: Toggle wallpaper picker", "Meta+W", ipc("wallpapers toggle"));
 registerShortcut("KShell Themes", "KShell: Toggle theme picker", "Meta+Shift+T", ipc("themes toggle"));
+registerShortcut("KShell Settings", "KShell: Toggle settings", "", ipc("settings toggle"));
 registerShortcut("KShell Session", "KShell: Toggle session menu", "", ipc("session toggle"));
 
 push();

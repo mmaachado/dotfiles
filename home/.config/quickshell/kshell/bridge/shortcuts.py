@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Swap global shortcuts between Plasma's defaults and KShell's.
 
-    shortcuts.py kshell   Meta → KShell launcher (Plasma keeps Alt+F1),
-                          Meta+W → wallpaper picker, KWin Overview → Meta+O
+    shortcuts.py kshell   Meta, Meta+Space and Alt+F1 → KShell launcher (Alt+F1 is
+                          what Toshy sends for Cmd+Space), Meta+W → wallpaper
+                          picker, KWin Overview → Meta+O
     shortcuts.py plasma   restore Plasma's Meta and Meta+W bindings
 """
 import sys
@@ -31,8 +32,8 @@ def set_keys(action, keys):
 
 
 if sys.argv[1:] == ["kshell"]:
-    set_keys(PLASMA, [ALT_F1])
-    set_keys(KSHELL, [META, META_SPACE])
+    set_keys(PLASMA, [])
+    set_keys(KSHELL, [META, META_SPACE, ALT_F1])
     set_keys(OVERVIEW, [META_O])         # free Meta+W first
     set_keys(WALLPAPERS, [META_W])
 elif sys.argv[1:] == ["plasma"]:

@@ -10,10 +10,13 @@ Pill {
 
     spacing: 6
     padding: 10
-    visible: SystemTray.items.values.length > 0
+    // Icons hidden in the settings window are left out.
+    readonly property var shown: SystemTray.items.values.filter(i => !Settings.options.hiddenTray.includes(i.id))
+
+    visible: shown.length > 0
 
     Repeater {
-        model: SystemTray.items
+        model: root.shown
 
         Item {
             id: entry

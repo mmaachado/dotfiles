@@ -61,6 +61,15 @@ Item {
 
         IconButton {
             anchors.horizontalCenter: parent.horizontalCenter
+            icon: "configure-symbolic"
+            iconSize: 18
+            tooltip: "Settings"
+            active: Settings.open
+            onClicked: Settings.toggle()
+        }
+
+        IconButton {
+            anchors.horizontalCenter: parent.horizontalCenter
             icon: "system-shutdown-symbolic"
             iconSize: 20
             tooltip: "Power"

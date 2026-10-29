@@ -3,8 +3,9 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.config
 
-// Wallpapers from ~/Pictures/Wallpapers. Plasma still owns the wallpaper:
+// Wallpapers from ~/Pictures/Wallpapers (or the folder set in Settings). Plasma still owns the wallpaper:
 // applying goes through plasma-apply-wallpaperimage, and the current one is
 // read back from Plasma's config.
 //
@@ -20,7 +21,8 @@ Singleton {
     signal changing(to: string)
     property string pending: ""
 
-    readonly property string dir: Quickshell.env("HOME") + "/Pictures/Wallpapers"
+    readonly property string dir: Settings.options.wallpaperDir || Quickshell.env("HOME") + "/Pictures/Wallpapers"
+    onDirChanged: refresh()
     property list<string> files: []
     property string current: ""
     // What Plasma actually shows.

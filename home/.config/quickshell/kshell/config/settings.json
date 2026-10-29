@@ -1,0 +1,19 @@
+{
+    "accentColor": "",
+    "backdropBlur": false,
+    "baseColor": "",
+    "frameOpacity": 0.62,
+    "hiddenTray": [
+    ],
+    "notchClock": "time",
+    "notchMedia": false,
+    "notchNotifications": false,
+    "statusIcons": [
+        "ethernet",
+        "sound"
+    ],
+    "transitionDuration": 2600,
+    "transitionEffect": "liquid",
+    "wallpaperDir": "",
+    "wallpaperTransition": true
+}

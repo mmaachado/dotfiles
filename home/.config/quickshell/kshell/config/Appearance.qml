@@ -44,36 +44,53 @@ Singleton {
 
     // Blur the wallpaper and desktop while an app window has focus
     // (modules/Backdrop.qml). Skipped while a window is fullscreen.
-    readonly property bool backdropBlur: true
+    readonly property bool backdropBlur: Settings.options.backdropBlur
 
     readonly property SystemPalette palette: SystemPalette { colorGroup: SystemPalette.Active }
+
+    // Shell colours: the KDE scheme's, unless overridden in Settings. With a
+    // custom background, text flips to black or white to stay readable.
+    readonly property color base: Settings.options.baseColor || palette.window
+    readonly property color accent: Settings.options.accentColor || palette.highlight
+    readonly property color ink: Settings.options.baseColor ? contrast(base) : palette.windowText
+    readonly property real frameOpacity: Settings.options.frameOpacity
+
+    function luma(c: color): real {
+        return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+    }
+
+    function contrast(c: color): color {
+        return luma(c) > 0.55 ? "#1e1e1e" : "#f2f2f2";
+    }
 
     // Layer a tint over the window colour: opaque normally, a translucent
     // overlay in blur themes (so the blurred background shows through).
     function layer(over: color, amount: real): color {
-        return root.blur ? Qt.alpha(over, amount) : Qt.tint(root.palette.window, Qt.alpha(over, amount));
+        return root.blur ? Qt.alpha(over, amount) : Qt.tint(root.base, Qt.alpha(over, amount));
     }
 
     readonly property QtObject colors: QtObject {
-        readonly property color frame: root.blur ? Qt.alpha(root.palette.window, 0.62) : root.palette.window
+        readonly property color frame: root.blur ? Qt.alpha(root.base, root.frameOpacity) : root.base
         // Things floating over the desktop without a blurred frame behind them.
-        readonly property color popup: root.blur ? Qt.alpha(root.palette.window, 0.92) : root.palette.window
-        readonly property color surface: root.layer(root.palette.windowText, 0.06)
-        readonly property color surfaceHigh: root.layer(root.palette.windowText, 0.11)
-        readonly property color surfaceHighest: Qt.tint(root.palette.window, Qt.alpha(root.palette.windowText, 0.16))
-        readonly property color primary: root.palette.highlight
-        readonly property color onPrimary: root.palette.highlightedText
-        readonly property color primaryContainer: root.layer(root.palette.highlight, 0.3)
-        readonly property color text: root.palette.windowText
-        readonly property color textDim: Qt.alpha(root.palette.windowText, 0.65)
-        readonly property color textFaint: Qt.alpha(root.palette.windowText, 0.35)
-        readonly property color outline: Qt.alpha(root.palette.windowText, 0.12)
+        readonly property color popup: root.blur ? Qt.alpha(root.base, Math.min(1, root.frameOpacity + 0.3)) : root.base
+        readonly property color surface: root.layer(root.ink, 0.06)
+        readonly property color surfaceHigh: root.layer(root.ink, 0.11)
+        readonly property color surfaceHighest: Qt.tint(root.base, Qt.alpha(root.ink, 0.16))
+        readonly property color primary: root.accent
+        readonly property color onPrimary: Settings.options.accentColor ? root.contrast(root.accent) : root.palette.highlightedText
+        readonly property color primaryContainer: root.layer(root.accent, 0.3)
+        readonly property color text: root.ink
+        readonly property color textDim: Qt.alpha(root.ink, 0.65)
+        readonly property color textFaint: Qt.alpha(root.ink, 0.35)
+        readonly property color outline: Qt.alpha(root.ink, 0.12)
         readonly property color error: "#da4453"
     }
 
     readonly property QtObject sizes: QtObject {
         readonly property int barWidth: 52
         readonly property int border: 10
+        // Collapsed notch (it flattens into the top border when windows get close).
+        readonly property int notchHeight: 36
         readonly property int rounding: 24
         readonly property int radius: 16
         readonly property int radiusSmall: 10

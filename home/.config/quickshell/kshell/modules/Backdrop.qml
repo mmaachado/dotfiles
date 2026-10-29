@@ -61,7 +61,7 @@ Scope {
         Rectangle {
             id: tint
             anchors.fill: parent
-            color: Qt.alpha(Appearance.palette.window, root.shown ? 0.18 : 0)
+            color: Qt.alpha(Appearance.base, root.shown ? 0.18 : 0)
 
             Behavior on color {
                 ColorAnimation { duration: Appearance.anim.normal }

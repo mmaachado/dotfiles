@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.config
 
 Singleton {
     id: root
@@ -46,7 +47,11 @@ Singleton {
     Connections {
         target: Bridge
         function onIpc(target: string, fn: string): void {
-            if (fn === "toggle")
+            if (fn !== "toggle")
+                return;
+            if (target === "settings")
+                Settings.toggle();
+            else
                 root.toggle(target, "");
         }
     }
@@ -70,6 +75,19 @@ Singleton {
     IpcHandler {
         target: "themes"
         function toggle(): void { root.toggle("themes", ""); }
+    }
+    IpcHandler {
+        target: "settings"
+        function toggle(): void { Settings.toggle(); }
+        function open(): void { Settings.open = true; }
+        function close(): void { Settings.open = false; }
+        // `kshell ipc settings page dock`
+        function page(name: string): void {
+            const i = ["appearance", "notch", "tray", "dock", "wallpaper"].indexOf(name.toLowerCase());
+            if (i >= 0)
+                Settings.page = i;
+            Settings.open = true;
+        }
     }
     IpcHandler {
         target: "drawers"

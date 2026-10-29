@@ -5,8 +5,9 @@ import Quickshell.Wayland
 import qs.config
 import qs.services
 
-// Liquid transition between wallpapers. A click-through surface on the Bottom
-// layer (over the Plasma desktop, under windows) floods from what it shows to
+// Transition between wallpapers (effects in shaders/, picked in Settings). A
+// click-through surface on the Bottom layer (over the Plasma desktop, under
+// windows) floods from what it shows to
 // Wallpapers.target: the wallpaper being previewed in the picker, else the
 // current one. Once a flood towards an applied wallpaper ends, Plasma is told
 // to switch underneath, and the surface fades away.
@@ -28,6 +29,10 @@ Scope {
     property bool snapping: false // for a mid-flood snapshot to load
     property var grab: null // keeps a snapshot's image alive
     property int seq: 0
+    // Shader in use (shaders/<effect>.frag). Only changed while the surface
+    // is hidden, so a shader swap never costs a visible frame.
+    property string effect: "liquid"
+    readonly property list<string> effects: ["liquid", "fade", "wipe", "circle", "pixelate", "dissolve"]
 
     readonly property list<Image> slots: [s0, s1, s2]
     property Image fromSlot: s0
@@ -72,6 +77,9 @@ Scope {
             if (t === Wallpapers.applied)
                 return;
             root.running = true;
+            const e = Settings.options.transitionEffect;
+            root.effect = e === "random" ? root.effects[Math.floor(Math.random() * root.effects.length)]
+                : root.effects.includes(e) ? e : "liquid";
             root.fromSlot = s0;
             s0.source = Wallpapers.url(Wallpapers.applied || t);
             fx.progress = 0;
@@ -203,12 +211,12 @@ Scope {
                 property var toTex: root.toSlot
 
                 anchors.fill: parent
-                fragmentShader: Qt.resolvedUrl("../shaders/liquid.frag.qsb")
+                fragmentShader: Qt.resolvedUrl(`../shaders/${root.effect}.frag.qsb`)
             }
 
             Rectangle {
                 anchors.fill: parent
-                color: Qt.alpha(Appearance.palette.window, 0.18)
+                color: Qt.alpha(Appearance.base, 0.18)
                 visible: root.blurred
             }
         }
@@ -220,7 +228,9 @@ Scope {
         property: "progress"
         from: 0
         to: 1
-        duration: Math.round(2600 * Appearance.motion)
+        // A zero-length flood when the transition is off: previews and
+        // wallpaper changes still go through here, they just swap instantly.
+        duration: Settings.options.wallpaperTransition ? Math.round(Settings.options.transitionDuration * Appearance.motion) : 0
         easing.type: Easing.InOutCubic
         onFinished: root.settle()
     }

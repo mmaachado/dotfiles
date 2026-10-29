@@ -24,6 +24,9 @@ start() {
 }
 
 stop() {
+    # Qt can crash tearing down an open settings window on exit, and the crash
+    # handler would then start a second copy; close it first.
+    qs -c "$CONFIG" ipc call settings close >/dev/null 2>&1 && sleep 0.3 || true
     qs -c "$CONFIG" kill >/dev/null 2>&1 || true
     # Quickshell can hang on exit; don't leave a half-dead instance behind.
     for _ in 1 2 3 4 5; do

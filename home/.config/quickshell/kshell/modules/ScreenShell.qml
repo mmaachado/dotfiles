@@ -21,6 +21,24 @@ Scope {
         || Quickshell.screens.length === 1
     readonly property bool drawerOpen: Visibilities.anyOpen && here
 
+    // The notch flattens into the frame's top edge while a window is
+    // maximized, fullscreen, or close enough to the notch that it would be covered.
+    readonly property real notchH: Appearance.sizes.notchHeight
+    readonly property real notchLeft: modelData.x + island.x + island.cornerRadius - 8
+    readonly property real notchRight: notchLeft + island.collapsedW + 16
+    readonly property bool merged: Bridge.currentWindows.some(w => !w.minimized
+        && (w.output === root.modelData.name || Quickshell.screens.length === 1)
+        && (w.maximized || w.fullscreen
+            || (w.y - root.modelData.y < root.notchH + 8 && w.x < root.notchRight && w.x + w.width > root.notchLeft)))
+    property real merge: merged ? 1 : 0
+    Behavior on merge {
+        NumberAnimation {
+            duration: Appearance.anim.slow
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: root.merged ? Appearance.anim.enter : Appearance.anim.exit
+        }
+    }
+
     Exclusions {
         screen: root.modelData
     }
@@ -103,6 +121,7 @@ Scope {
             item: bar
             Region { item: popups }
             Region { item: island }
+            Region { item: island.edgeItem }
         }
 
         Item {
@@ -156,6 +175,7 @@ Scope {
                 id: island
                 screenName: root.modelData.name
                 here: root.here
+                merge: root.merge
                 y: Appearance.sizes.border
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.horizontalCenterOffset: Appearance.sizes.barWidth / 2 - Appearance.sizes.border / 2

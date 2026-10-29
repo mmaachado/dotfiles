@@ -72,8 +72,18 @@ Singleton {
 
     function togglePin(id: string): void {
         id = norm(id);
-        root.pinned = root.pinned.includes(id) ? root.pinned.filter(p => p !== id) : [...root.pinned, id];
-        file.setText(JSON.stringify(root.pinned, null, 2) + "\n");
+        save(root.pinned.includes(id) ? root.pinned.filter(p => p !== id) : [...root.pinned, id]);
+    }
+
+    function movePin(from: int, to: int): void {
+        const list = [...root.pinned];
+        list.splice(to, 0, ...list.splice(from, 1));
+        save(list);
+    }
+
+    function save(list: list<string>): void {
+        root.pinned = list;
+        file.setText(JSON.stringify(list, null, 2) + "\n");
     }
 
     FileView {

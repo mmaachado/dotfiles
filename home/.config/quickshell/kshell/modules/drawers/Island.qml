@@ -13,13 +13,16 @@ Item {
 
     required property string screenName
     required property bool here
+    // 0 = hanging notch, 1 = flattened into the frame's top edge, leaving a
+    // small clock there (ScreenShell animates it).
+    required property real merge
 
     readonly property bool expanded: Visibilities.dashboard && here
     readonly property int pad: Appearance.sizes.padding
     readonly property real r: Appearance.sizes.rounding
 
     readonly property real collapsedW: notch.implicitWidth + 36
-    readonly property real collapsedH: 36
+    readonly property real collapsedH: Appearance.sizes.notchHeight
     readonly property real expandedW: dash.implicitWidth + pad * 2
     readonly property real expandedH: dash.implicitHeight + pad * 2
 
@@ -39,13 +42,43 @@ Item {
     property bool openedByHover: false
     readonly property Item bodyItem: body
     readonly property real cornerRadius: shape.rr
+    // Strip of the top edge over the notch, so hovering it still opens the
+    // dashboard when the notch has flattened (ScreenShell adds it to the input mask).
+    readonly property Item edgeItem: edge
+    readonly property bool hovered: hover.hovered || edgeHover.hovered
 
     HoverHandler {
         id: hover
     }
 
+    Item {
+        id: edge
+        x: root.r
+        y: -Appearance.sizes.border
+        width: root.collapsedW
+        height: Appearance.sizes.border
+        visible: root.merge > 0.5 && !root.expanded
+
+        HoverHandler {
+            id: edgeHover
+        }
+        TapHandler {
+            onTapped: Visibilities.show("dashboard", root.screenName)
+        }
+
+        // Small clock left in the edge.
+        StyledText {
+            anchors.centerIn: parent
+            text: Time.format(Time.use24h ? "hh:mm" : "h:mm AP")
+            font.pointSize: 6
+            font.bold: true
+            color: Appearance.colors.textDim
+            opacity: Math.max(0, root.merge * 2 - 1)
+        }
+    }
+
     Timer {
-        running: hover.hovered && !root.expanded
+        running: root.hovered && !root.expanded
         interval: 180
         onTriggered: {
             root.openedByHover = true;
@@ -54,7 +87,7 @@ Item {
     }
 
     Timer {
-        running: !hover.hovered && root.expanded && root.openedByHover
+        running: !root.hovered && root.expanded && root.openedByHover
         interval: 400
         onTriggered: Visibilities.closeAll()
     }
@@ -66,7 +99,9 @@ Item {
         id: shape
         edge: "top"
         length: root.collapsedW + (root.expandedW - root.collapsedW) * root.t
-        depth: root.collapsedH + (root.expandedH - root.collapsedH) * root.t
+        // Collapsed, the notch slides up into the top edge as it merges.
+        readonly property real collapsedDepth: root.collapsedH * (1 - root.merge)
+        depth: collapsedDepth + (root.expandedH - collapsedDepth) * root.t
     }
 
     Item {
@@ -83,15 +118,22 @@ Item {
             readonly property bool playing: player?.isPlaying ?? false
 
             anchors.horizontalCenter: parent.horizontalCenter
-            y: (root.collapsedH - height) / 2
+            // Rides up with the notch as it flattens.
+            y: (root.collapsedH - height) / 2 - root.collapsedH * root.merge
             height: 22
             spacing: 10
-            opacity: Math.max(0, 1 - root.t * 4)
+            opacity: Math.max(0, 1 - root.t * 4) * (1 - root.merge)
             visible: opacity > 0
 
+            // Clock: time, date or both (Settings → Notch).
             StyledText {
+                readonly property string time: Time.format(Time.use24h ? "hh:mm" : "h:mm AP")
+                readonly property string date: Time.format("ddd d MMM")
+
                 anchors.verticalCenter: parent.verticalCenter
-                text: Time.format(Time.use24h ? "hh:mm" : "h:mm AP")
+                text: Settings.options.notchClock === "date" ? date
+                    : Settings.options.notchClock === "datetime" ? `${date}  ·  ${time}`
+                    : time
                 font.bold: true
             }
 
@@ -99,7 +141,7 @@ Item {
             Row {
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 8
-                visible: notch.playing
+                visible: notch.playing && Settings.options.notchMedia
 
                 Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
@@ -165,7 +207,7 @@ Item {
             Row {
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 6
-                visible: Notifs.list.length > 0 || Visibilities.dnd
+                visible: Settings.options.notchNotifications && (Notifs.list.length > 0 || Visibilities.dnd)
 
                 Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
