@@ -19,3 +19,7 @@ export PATH="$HOME/tools/node-v14.15.4-linux-x64/bin:$PATH"
 eval "$(starship init zsh)"
 
 fastfetch
+
+# Default editor
+export EDITOR="code --wait"
+export VISUAL="$EDITOR"

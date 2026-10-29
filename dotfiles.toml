@@ -8,7 +8,11 @@ repo = [
     "curl",
     "git",
     "pacman-contrib",
+    "fzf",
     "ttf-jetbrains-mono-nerd",
+    "ttf-nerd-fonts-symbols",
+    "ttf-nerd-fonts-symbols-mono",
+    "noto-fonts-cjk",
 ]
 
 [packages.kshell]
@@ -29,11 +33,17 @@ repo = [
 ]
 
 [packages.optional]
-description = "Nice to have: zsh plugins and Bluetooth"
+description = "Nice to have: zsh plugins, CLI tools and Bluetooth"
 optional = true
 repo = [
     "zsh-autosuggestions",
     "zsh-syntax-highlighting",
+    "zsh-completions",
+    "zsh-history-substring-search",
+    "zoxide",
+    "eza",
+    "bat",
+    "fd",
     "bluez",
     "bluez-utils",
 ]

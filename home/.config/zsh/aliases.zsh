@@ -5,6 +5,14 @@ alias grep='grep --color=auto'
 
 alias lt='tree'
 
+# modern replacements, when installed (packages: eza, bat)
+(( $+commands[eza] )) && {
+    alias ls='eza --icons --group-directories-first'
+    alias ll='ls -lah --git'
+    alias lt='eza --tree --icons'
+}
+(( $+commands[bat] )) && alias cat='bat --paging=never'
+
 # print IPv4/IPv6 address
 alias ipv4="ip addr show | grep 'inet ' | grep -v '127.0.0.1' | awk '{print \$2}' | cut -d/ -f1"
 alias ipv6="ip addr show | grep 'inet6 ' | awk '{print \$2}' | sed -n '2p'"

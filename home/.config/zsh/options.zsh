@@ -21,10 +21,21 @@ autoload -Uz compinit
 compinit
 zstyle ':completion:*' menu select
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 
-# optional plugins (packages: zsh-autosuggestions, zsh-syntax-highlighting)
-for p in /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh \
-         /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh; do
-    [[ -f $p ]] && source "$p"
+# optional plugins (packages: zsh-autosuggestions, zsh-syntax-highlighting,
+# zsh-history-substring-search; order matters)
+for p in zsh-autosuggestions/zsh-autosuggestions.zsh \
+         zsh-syntax-highlighting/zsh-syntax-highlighting.zsh \
+         zsh-history-substring-search/zsh-history-substring-search.zsh; do
+    [[ -f /usr/share/zsh/plugins/$p ]] && source /usr/share/zsh/plugins/$p
 done
 unset p
+(( $+widgets[history-substring-search-up] )) && {
+    bindkey '^[[A' history-substring-search-up
+    bindkey '^[[B' history-substring-search-down
+}
+
+# fzf (Ctrl-R history, Ctrl-T files, Alt-C cd) and zoxide (z / zi)
+(( $+commands[fzf] ))    && source <(fzf --zsh)
+(( $+commands[zoxide] )) && eval "$(zoxide init zsh)"
