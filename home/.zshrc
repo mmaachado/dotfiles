@@ -1,7 +1,7 @@
 # ~/.zshrc — interactive zsh
 [[ $- != *i* ]] && return
 
-export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$HOME/.config/emacs/bin:$PATH"
 
 for f in options aliases scripts; do
     [[ -f ~/.config/zsh/$f.zsh ]] && source ~/.config/zsh/$f.zsh
