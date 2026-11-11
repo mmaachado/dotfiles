@@ -27,6 +27,7 @@ Item {
         } else {
             previewDelay.stop();
             Wallpapers.preview = "";
+            input.focus = false; // see Launcher.qml
         }
     }
 

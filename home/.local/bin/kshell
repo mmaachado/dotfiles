@@ -32,14 +32,26 @@ start() {
 }
 
 stop() {
-    # Qt can crash tearing down an open settings window on exit, and the crash
-    # handler would then start a second copy; close it first.
-    qs -c "$CONFIG" ipc call settings close >/dev/null 2>&1 && sleep 0.3 || true
+    # Qt can crash tearing down an open settings window or a focused search
+    # field on exit, and the crash handler would then start a second copy;
+    # close them first.
+    qs -c "$CONFIG" ipc call settings close >/dev/null 2>&1 || true
+    qs -c "$CONFIG" ipc call drawers close >/dev/null 2>&1 && sleep 0.3 || true
     qs -c "$CONFIG" kill >/dev/null 2>&1 || true
-    # Quickshell can hang on exit; don't leave a half-dead instance behind.
-    for _ in 1 2 3 4 5; do
-        pgrep -u "$USER" -f "$PATTERN" >/dev/null || return 0
-        sleep 0.2
+    # Quickshell can hang on exit, and a crash-restarted copy runs as a bare
+    # `quickshell` the pattern below can't see; `qs list` still finds it.
+    # Keep going until neither shows anything for a moment.
+    local quiet=0
+    for _ in $(seq 20); do
+        local pids
+        pids=$( { pgrep -u "$USER" -f "$PATTERN"; qs -c "$CONFIG" list 2>/dev/null | awk '/Process ID:/ {print $3}'; } | sort -u)
+        if [[ -z $pids ]]; then
+            (( ++quiet >= 4 )) && return 0
+        else
+            quiet=0
+            kill $pids 2>/dev/null || true
+        fi
+        sleep 0.25
     done
     pkill -9 -u "$USER" -f "$PATTERN" || true
 }
