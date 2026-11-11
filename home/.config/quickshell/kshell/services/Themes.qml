@@ -26,6 +26,22 @@ Singleton {
         Scheme.reconcile();
     }
 
+    // Switch between the light and dark version of the current look: same
+    // blur, opposite brightness. Remembers what was picked last for each.
+    property var lastOf: ({})
+    function toggleDark(): void {
+        const cur = root.list.find(t => t.id === root.target);
+        if (!cur)
+            return;
+        root.lastOf[cur.dark] = cur.id;
+        const want = !cur.dark;
+        const remembered = root.list.find(t => t.id === root.lastOf[want] && t.blur === cur.blur);
+        const next = remembered ?? root.list.find(t => t.dark === want && t.blur === cur.blur)
+            ?? root.list.find(t => t.dark === want);
+        if (next)
+            root.apply(next.id);
+    }
+
     function rgb(c: var): color {
         return Qt.rgba(c[0] / 255, c[1] / 255, c[2] / 255, 1);
     }

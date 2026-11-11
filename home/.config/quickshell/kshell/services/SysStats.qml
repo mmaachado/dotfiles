@@ -15,6 +15,9 @@ Singleton {
     property real memUsedGiB: 0
     property real memTotalGiB: 0
     property real disk: 0
+    // CPU temperature in °C (k10temp / coretemp / zenpower), 0 if unknown.
+    property real temp: 0
+    property string tempPath: ""
 
     property var lastCpu: null
 
@@ -26,6 +29,8 @@ Singleton {
         onTriggered: {
             stat.reload();
             meminfo.reload();
+            if (root.tempPath)
+                temp.reload();
             if (!df.running)
                 df.running = true;
         }
@@ -57,6 +62,21 @@ Singleton {
             root.memUsedGiB = (total - avail) / 1048576;
             root.mem = 1 - avail / total;
         }
+    }
+
+    Process {
+        running: true
+        command: ["sh", "-c", "for h in /sys/class/hwmon/hwmon*; do case $(cat $h/name) in k10temp|coretemp|zenpower|cpu_thermal) echo $h/temp1_input; exit;; esac; done"]
+        stdout: StdioCollector {
+            onStreamFinished: root.tempPath = text.trim()
+        }
+    }
+
+    FileView {
+        id: temp
+        path: root.tempPath
+        printErrors: false
+        onLoaded: root.temp = parseInt(text()) / 1000
     }
 
     Process {

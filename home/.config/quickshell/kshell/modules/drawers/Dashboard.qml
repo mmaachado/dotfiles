@@ -9,12 +9,12 @@ import qs.config
 import qs.services
 import qs.modules.notifications
 
-// Dashboard: clock + calendar | media | controls & resources | notifications
+// Dashboard: clock, calendar & resources | media | quick settings | notifications
 Row {
     id: root
 
     property bool open
-    readonly property int sectionHeight: 380
+    readonly property int sectionHeight: quick.hasBattery ? 476 : 416
 
     spacing: 14
 
@@ -33,64 +33,6 @@ Row {
             id: inner
             anchors.fill: parent
             anchors.margins: parent.pad
-        }
-    }
-
-    component Meter: Column {
-        property string label
-        property real value
-        property string detail
-
-        width: parent.width
-        spacing: 6
-
-        Item {
-            width: parent.width
-            height: l.implicitHeight
-            StyledText { id: l; text: label; color: Appearance.colors.textDim; font.pointSize: Appearance.font.small }
-            StyledText { anchors.right: parent.right; text: detail || `${Math.round(value * 100)}%`; font.pointSize: Appearance.font.small }
-        }
-        Rectangle {
-            width: parent.width
-            height: 8
-            radius: 4
-            color: Appearance.colors.surfaceHigh
-            Rectangle {
-                width: parent.width * Math.min(1, value)
-                height: parent.height
-                radius: 4
-                color: value > 0.85 ? Appearance.colors.error : Appearance.colors.primary
-                Behavior on width { NumberAnimation { duration: Appearance.anim.normal } }
-            }
-        }
-    }
-
-    component Toggle: Rectangle {
-        id: toggle
-        property string icon
-        property string label
-        property bool on
-        signal clicked
-
-        width: (parent.width - 8) / 2
-        height: 48
-        radius: on ? Appearance.sizes.radius : height / 2
-        color: on ? Appearance.colors.primary : Appearance.colors.surfaceHigh
-
-        Behavior on radius { NumberAnimation { duration: Appearance.anim.normal } }
-        Behavior on color { ColorAnimation { duration: Appearance.anim.fast } }
-
-        Row {
-            anchors.left: parent.left
-            anchors.leftMargin: 14
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 10
-            Icon { name: toggle.icon; size: 18; color: toggle.on ? Appearance.colors.onPrimary : Appearance.colors.text }
-            StyledText { text: toggle.label; color: toggle.on ? Appearance.colors.onPrimary : Appearance.colors.text; width: toggle.width - 56 }
-        }
-        StateLayer {
-            tint: toggle.on ? Appearance.colors.onPrimary : Appearance.colors.text
-            onClicked: toggle.clicked()
         }
     }
 
@@ -131,7 +73,7 @@ Row {
             MonthGrid {
                 id: grid
                 width: parent.width
-                height: 190
+                height: 160
                 month: Time.now.getMonth()
                 year: Time.now.getFullYear()
                 locale: Qt.locale()
@@ -156,6 +98,24 @@ Row {
                              : parent.model.month === grid.month ? Appearance.colors.text : Appearance.colors.textFaint
                     }
                 }
+            }
+        }
+
+        // Resources
+        Row {
+            anchors.bottom: parent.bottom
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: 16
+
+            Ring { width: 50; value: SysStats.cpu; text: `${Math.round(SysStats.cpu * 100)}`; caption: "CPU" }
+            Ring { width: 50; value: SysStats.mem; text: `${Math.round(SysStats.mem * 100)}`; caption: "RAM" }
+            Ring { width: 50; value: SysStats.disk; text: `${Math.round(SysStats.disk * 100)}`; caption: "Disk" }
+            Ring {
+                width: 50
+                visible: SysStats.temp > 0
+                value: SysStats.temp / 100
+                text: `${Math.round(SysStats.temp)}°`
+                caption: "Temp"
             }
         }
     }
@@ -211,25 +171,25 @@ Row {
                 }
             }
 
-            Rectangle {
+            // Seek bar: the wave drifts while playing.
+            WavySlider {
                 width: parent.width
-                height: 4
-                radius: 2
-                color: Appearance.colors.surfaceHigh
+                height: 24
                 visible: (media.player?.lengthSupported ?? false) && media.player.length > 0
-                Rectangle {
-                    width: parent.width * Math.min(1, (media.player?.position ?? 0) / Math.max(1, media.player?.length ?? 1))
-                    height: parent.height
-                    radius: 2
-                    color: Appearance.colors.primary
-                }
-                MouseArea {
-                    anchors.fill: parent
-                    anchors.margins: -6
-                    enabled: media.player?.canSeek ?? false
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: mouse => media.player.position = media.player.length * mouse.x / width
-                }
+                enabled: media.player?.canSeek ?? false
+                flowing: media.player?.isPlaying ?? false
+                wavy: media.player?.isPlaying ?? false
+                amplitude: 2.6
+                value: (media.player?.position ?? 0) / Math.max(1, media.player?.length ?? 1)
+                onMoved: v => media.player.position = media.player.length * v
+            }
+
+            // MPRIS doesn't push position updates; ask while it's on screen.
+            Timer {
+                running: root.open && (media.player?.isPlaying ?? false)
+                interval: 1000
+                repeat: true
+                onTriggered: media.player.positionChanged()
             }
 
             Row {
@@ -265,66 +225,15 @@ Row {
         }
     }
 
-    // ── Controls & resources ─────────────────────────────────────────
+    // ── Quick settings ───────────────────────────────────────────────
     Section {
-        width: 300
+        width: 364
+        clip: true
 
-        Column {
+        QuickSettings {
+            id: quick
             anchors.fill: parent
-            spacing: 12
-
-            StyledSlider {
-                width: parent.width
-                value: Audio.muted ? 0 : Audio.volume
-                icon: Audio.icon
-                onMoved: v => Audio.setVolume(v)
-                onIconClicked: Audio.toggleMute()
-            }
-
-            Flow {
-                width: parent.width
-                spacing: 8
-
-                Toggle {
-                    icon: Network.icon
-                    label: Network.type === "none" ? "Offline" : Network.name
-                    on: Network.type !== "none"
-                    onClicked: Network.toggleWifi()
-                }
-                Toggle {
-                    readonly property var adapter: Bluetooth.defaultAdapter
-                    icon: "network-bluetooth-symbolic"
-                    label: "Bluetooth"
-                    on: adapter?.enabled ?? false
-                    visible: adapter !== null
-                    onClicked: adapter.enabled = !adapter.enabled
-                }
-                Toggle {
-                    icon: Visibilities.dnd ? "notifications-disabled-symbolic" : "notifications-symbolic"
-                    label: "Do not disturb"
-                    on: Visibilities.dnd
-                    onClicked: Visibilities.dnd = !Visibilities.dnd
-                }
-                Toggle {
-                    icon: "configure-symbolic"
-                    label: "Settings"
-                    onClicked: {
-                        Visibilities.closeAll();
-                        Quickshell.execDetached(["systemsettings"]);
-                    }
-                }
-                Toggle {
-                    icon: "system-shutdown-symbolic"
-                    label: "Power"
-                    onClicked: Visibilities.show("session", Visibilities.screen)
-                }
-            }
-
-            Item { width: 1; height: 2 }
-
-            Meter { label: "CPU"; value: SysStats.cpu }
-            Meter { label: "Memory"; value: SysStats.mem; detail: `${SysStats.memUsedGiB.toFixed(1)} / ${SysStats.memTotalGiB.toFixed(1)} GiB` }
-            Meter { label: "Disk ( / )"; value: SysStats.disk }
+            open: root.open
         }
     }
 
