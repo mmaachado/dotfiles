@@ -23,7 +23,7 @@ Singleton {
         onLoadFailed: root.motion = 1
     }
 
-    // Active KShell theme (written by bridge/themes.py). Blur themes make the
+    // Active KShell theme (written by kshelld theme). Blur themes make the
     // shell translucent and ask KWin to blur behind it.
     property bool blur: false
 

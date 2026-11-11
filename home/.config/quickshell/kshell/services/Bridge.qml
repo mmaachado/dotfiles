@@ -4,7 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// Window / virtual-desktop state from KWin, via bridge/bridge.py + bridge.js.
+// Window / virtual-desktop state from KWin, via kshelld (daemon/) + bridge/bridge.js.
 Singleton {
     id: root
 
@@ -19,6 +19,9 @@ Singleton {
     readonly property int currentIndex: desktops.findIndex(d => d.id === current)
     readonly property var activeWindow: windows.find(w => w.active) ?? null
     readonly property var currentWindows: windows.filter(w => w.desktops.length === 0 || w.desktops.includes(current))
+
+    // The native backend, installed by `kshell build` into ~/.local/bin.
+    readonly property string kshelld: Quickshell.env("HOME") + "/.local/bin/kshelld"
 
     signal ipc(string target, string fn)
 
@@ -44,7 +47,7 @@ Singleton {
         id: proc
         running: true
         stdinEnabled: true
-        command: ["python3", "-I", Quickshell.shellDir + "/bridge/bridge.py"]
+        command: [root.kshelld, "bridge", Quickshell.shellDir + "/bridge/bridge.js"]
         stdout: SplitParser {
             onRead: line => {
                 const sp = line.indexOf(" ");

@@ -3,6 +3,7 @@
 #   kshell enable    remove Plasma panels, start KShell, autostart it, Meta → launcher
 #   kshell disable   stop KShell and put the Plasma panels back
 #   kshell restart   restart KShell
+#   kshell build     build and install the native backend (kshelld) into ~/.local/bin
 #   kshell ipc ...   e.g. `kshell ipc launcher toggle`
 set -euo pipefail
 
@@ -11,14 +12,21 @@ APPLETSRC="$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
 STATE="$HOME/.local/share/kshell"
 BACKUP="$STATE/panels-backup.appletsrc"
 AUTOSTART="$HOME/.config/autostart/kshell.desktop"
-SHORTCUTS="$HOME/.config/quickshell/$CONFIG/bridge/shortcuts.py"
+SHELLDIR="$HOME/.config/quickshell/$CONFIG"
+KSHELLD="$HOME/.local/bin/kshelld"
 
 plasma_js() { qdbus6 org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "$1"; }
 
 # Anchored, so shells whose command line merely mentions it don't match.
 PATTERN="^(qs|quickshell) -c $CONFIG( |\$)"
 
+build() {
+    command -v cargo >/dev/null || { echo "cargo is not installed: sudo pacman -S rust" >&2; exit 1; }
+    cargo install --quiet --locked --path "$SHELLDIR/daemon" --root "$HOME/.local"
+}
+
 start() {
+    [[ -x $KSHELLD ]] || build
     pgrep -u "$USER" -f "$PATTERN" >/dev/null && return
     setsid -f qs -c "$CONFIG" >/dev/null 2>&1
 }
@@ -59,14 +67,14 @@ DESK
         qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.isScriptLoaded "$(cat "${XDG_RUNTIME_DIR:-/tmp}/kshell/plugin" 2>/dev/null)" 2>/dev/null | grep -q true && break
         sleep 0.25
     done
-    python3 -I "$SHORTCUTS" kshell
+    "$KSHELLD" shortcuts kshell
     echo "KShell enabled (Meta opens the launcher)"
 }
 
 disable() {
     stop
     rm -f "$AUTOSTART"
-    python3 -I "$SHORTCUTS" plasma
+    "$KSHELLD" shortcuts plasma
     if [[ -f $BACKUP && $(plasma_js 'print(panels().length)') == 0 ]]; then
         kquitapp6 plasmashell || true
         # Merge only the panel containments back so desktop-widget changes made
@@ -102,6 +110,7 @@ case "${1:-}" in
     enable) enable ;;
     disable) disable ;;
     restart) stop; sleep 0.5; start ;;
+    build) build ;;
     ipc) shift; qs -c "$CONFIG" ipc call "$@" ;;
     *) sed -n '2,7p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
 esac

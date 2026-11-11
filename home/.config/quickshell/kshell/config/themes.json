@@ -1,5 +1,5 @@
 {
-  "_comment": "KShell themes. bridge/themes.py turns each palette into a KDE colour scheme, a Kvantum theme (blur themes) and kitty colours. RGB values. Blur themes: blurStrength = KWin blur strength (1-15, KWin default 10), appTranslucency = % of Qt app window opacity removed.",
+  "_comment": "KShell themes. kshelld (daemon/src/theme.rs) turns each palette into a KDE colour scheme, a Kvantum theme (blur themes) and kitty colours. RGB values. Blur themes: blurStrength = KWin blur strength (1-15, KWin default 10), appTranslucency = % of Qt app window opacity removed.",
   "themes": [
     {
       "id": "slate",

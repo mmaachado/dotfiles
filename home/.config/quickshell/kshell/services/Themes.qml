@@ -4,7 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// KShell themes (config/themes.json), applied desktop-wide by bridge/themes.py.
+// KShell themes (config/themes.json), applied desktop-wide by kshelld.
 Singleton {
     id: root
 
@@ -13,7 +13,7 @@ Singleton {
 
     function apply(id: string): void {
         root.current = id;
-        Quickshell.execDetached(["python3", "-I", Quickshell.shellDir + "/bridge/themes.py", "apply", id]);
+        Quickshell.execDetached([Bridge.kshelld, "theme", "--themes", Quickshell.shellDir + "/config/themes.json", "apply", id]);
     }
 
     function rgb(c: var): color {

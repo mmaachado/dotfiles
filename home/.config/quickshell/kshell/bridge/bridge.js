@@ -1,4 +1,4 @@
-// KWin script loaded by bridge.py. Pushes window/desktop state to the
+// KWin script loaded by kshelld bridge. Pushes window/desktop state to the
 // org.kshell.Bridge DBus service and registers KShell global shortcuts.
 const SVC = "org.kshell.Bridge", PATH = "/org/kshell/Bridge", IFACE = "org.kshell.Bridge";
 
