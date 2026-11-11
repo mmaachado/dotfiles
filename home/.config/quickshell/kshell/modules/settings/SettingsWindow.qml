@@ -315,6 +315,16 @@ FloatingWindow {
             }
 
             SettingRow {
+                icon: "audio-volume-high"
+                label: "KShell OSD"
+                description: "Show volume, brightness and other changes in the frame instead of Plasma's popup."
+                StyledSwitch {
+                    checked: Settings.options.osd
+                    onToggled: Settings.options.osd = !checked
+                }
+            }
+
+            SettingRow {
                 icon: "preferences-desktop-theme-global"
                 label: "Theme"
                 description: "Colours, window decorations and blur for the shell, Plasma and kitty."

@@ -8,9 +8,12 @@
 //! Commands from Quickshell arrive on stdin:
 //!     activate|toggle|close <window id>
 //!     desktop <desktop id>
+//!     osd 1|0           hide Plasma's OSD windows (KShell draws its own)
 
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use anyhow::{Context, Result, bail};
@@ -33,18 +36,25 @@ enum Event {
     Line(String),
 }
 
-struct Bridge(mpsc::UnboundedSender<Event>);
+struct Bridge {
+    tx: mpsc::UnboundedSender<Event>,
+    hide_osd: Arc<AtomicBool>,
+}
 
 #[interface(name = "org.kshell.Bridge")]
 impl Bridge {
     fn update(&self, state: String) {
-        let _ = self.0.send(Event::Update(state));
+        let _ = self.tx.send(Event::Update(state));
     }
     fn ipc(&self, cmd: String) {
-        let _ = self.0.send(Event::Line(format!("ipc {cmd}")));
+        let _ = self.tx.send(Event::Line(format!("ipc {cmd}")));
     }
     fn toggle_launcher(&self) {
-        let _ = self.0.send(Event::Line("ipc launcher toggle".into()));
+        let _ = self.tx.send(Event::Line("ipc launcher toggle".into()));
+    }
+    /// Asked by bridge.js: should Plasma's OSD windows be hidden?
+    fn hide_plasma_osd(&self) -> bool {
+        self.hide_osd.load(Ordering::Relaxed)
     }
 }
 
@@ -136,7 +146,11 @@ fn emit(line: &str) -> bool {
 }
 
 pub async fn run(args: &[String]) -> Result<()> {
-    let [script] = args else { bail!("usage: kshelld bridge <bridge.js>") };
+    let (script, hide) = match args {
+        [script] => (script, false),
+        [script, flag] if flag == "--hide-plasma-osd" => (script, true),
+        _ => bail!("usage: kshelld bridge <bridge.js> [--hide-plasma-osd]"),
+    };
     let script = std::fs::canonicalize(script).with_context(|| format!("no script at {script}"))?;
 
     let runtime = std::env::var_os("XDG_RUNTIME_DIR")
@@ -147,7 +161,8 @@ pub async fn run(args: &[String]) -> Result<()> {
 
     let (tx, mut rx) = mpsc::unbounded_channel();
     let conn = Connection::session().await?;
-    conn.object_server().at(PATH, Bridge(tx)).await?;
+    let hide_osd = Arc::new(AtomicBool::new(hide));
+    conn.object_server().at(PATH, Bridge { tx, hide_osd: hide_osd.clone() }).await?;
 
     let dbus = DBusProxy::new(&conn).await?;
     let mut name_lost = dbus.receive_name_lost().await?;
@@ -189,7 +204,9 @@ pub async fn run(args: &[String]) -> Result<()> {
             }
             line = stdin.next_line() => match line {
                 Ok(Some(line)) => {
-                    if let Some((kind, target)) = line.trim().split_once(' ')
+                    if let Some(("osd", on)) = line.trim().split_once(' ') {
+                        hide_osd.store(on == "1", Ordering::Relaxed);
+                    } else if let Some((kind, target)) = line.trim().split_once(' ')
                         && let Err(e) = kwin.action(kind, target).await
                     {
                         eprintln!("kshell-bridge: {e:#}");

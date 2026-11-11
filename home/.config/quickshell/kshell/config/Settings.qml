@@ -63,6 +63,9 @@ Singleton {
             // Status icons in the bar: ethernet, wifi, bluetooth, sound, battery, power.
             property list<string> statusIcons: ["ethernet", "sound"]
 
+            // Draw KShell's own OSD (volume, brightness, ...) instead of Plasma's.
+            property bool osd: true
+
             // Collapsed notch: time | date | datetime, plus what else it shows.
             property string notchClock: "time"
             property bool notchMedia: true

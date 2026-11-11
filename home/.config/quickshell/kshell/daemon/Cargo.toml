@@ -8,6 +8,8 @@ license = "MIT"
 [dependencies]
 anyhow = "1"
 futures-util = { version = "0.3", default-features = false }
+wayland-client = "0.31"
+wayland-protocols = { version = "0.32", features = ["client", "staging"] }
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
 material-colors = { version = "0.5", features = ["quantize"] }
 serde = { version = "1", features = ["derive"] }

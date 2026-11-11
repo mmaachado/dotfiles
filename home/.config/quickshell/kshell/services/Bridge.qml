@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.config
 
 // Window / virtual-desktop state from KWin, via kshelld (daemon/) + bridge/bridge.js.
 Singleton {
@@ -47,7 +48,9 @@ Singleton {
         id: proc
         running: true
         stdinEnabled: true
-        command: [root.kshelld, "bridge", Quickshell.shellDir + "/bridge/bridge.js"]
+        // KShell draws its own OSD; the bridge then hides Plasma's (bridge.js).
+        command: [root.kshelld, "bridge", Quickshell.shellDir + "/bridge/bridge.js",
+            ...(Settings.options.osd ? ["--hide-plasma-osd"] : [])]
         stdout: SplitParser {
             onRead: line => {
                 const sp = line.indexOf(" ");
@@ -69,6 +72,14 @@ Singleton {
             }
         }
         onExited: restart.start()
+    }
+
+    // The KWin script reads the flag when it loads, so restart the bridge.
+    Connections {
+        target: Settings.options
+        function onOsdChanged() {
+            proc.running = false; // onExited → restart
+        }
     }
 
     Timer {

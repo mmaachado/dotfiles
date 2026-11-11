@@ -13,11 +13,12 @@ Singleton {
     property bool session
     property bool wallpapers
     property bool themes
+    property bool clipboard
     property bool dnd
     // Name of the screen the drawers open on (empty = any)
     property string screen: ""
 
-    readonly property bool anyOpen: launcher || dashboard || session || wallpapers || themes
+    readonly property bool anyOpen: launcher || dashboard || session || wallpapers || themes || clipboard
 
     function toggle(name: string, screenName: string): void {
         const was = root[name];
@@ -42,6 +43,7 @@ Singleton {
         session = false;
         wallpapers = false;
         themes = false;
+        clipboard = false;
     }
 
     Connections {
@@ -75,6 +77,10 @@ Singleton {
     IpcHandler {
         target: "themes"
         function toggle(): void { root.toggle("themes", ""); }
+    }
+    IpcHandler {
+        target: "clipboard"
+        function toggle(): void { root.toggle("clipboard", ""); }
     }
     IpcHandler {
         target: "settings"

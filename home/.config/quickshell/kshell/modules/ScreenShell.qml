@@ -61,7 +61,7 @@ Scope {
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.namespace: "kshell"
         WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.keyboardFocus: root.drawerOpen && (Visibilities.launcher || Visibilities.session || Visibilities.wallpapers || Visibilities.themes)
+        WlrLayershell.keyboardFocus: root.drawerOpen && (Visibilities.launcher || Visibilities.session || Visibilities.wallpapers || Visibilities.themes || Visibilities.clipboard)
             ? WlrKeyboardFocus.Exclusive : root.drawerOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
         mask: root.drawerOpen ? fullRegion : idleRegion
@@ -100,12 +100,22 @@ Scope {
                 topRightRadius: Appearance.sizes.rounding
             }
             Region {
+                item: clipboardDrawer.body
+                topLeftRadius: Appearance.sizes.rounding
+                topRightRadius: Appearance.sizes.rounding
+            }
+            Region {
                 item: themeDrawer.body
                 topLeftRadius: Appearance.sizes.rounding
                 topRightRadius: Appearance.sizes.rounding
             }
             Region {
                 item: sessionDrawer.body
+                topLeftRadius: Appearance.sizes.rounding
+                bottomLeftRadius: Appearance.sizes.rounding
+            }
+            Region {
+                item: osdDrawer.body
                 topLeftRadius: Appearance.sizes.rounding
                 bottomLeftRadius: Appearance.sizes.rounding
             }
@@ -209,6 +219,20 @@ Scope {
             }
 
             Drawer {
+                id: clipboardDrawer
+                edge: "bottom"
+                open: Visibilities.clipboard && root.here
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: Appearance.sizes.border
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.horizontalCenterOffset: Appearance.sizes.barWidth / 2 - Appearance.sizes.border / 2
+
+                ClipboardPicker {
+                    open: Visibilities.clipboard && root.here
+                }
+            }
+
+            Drawer {
                 id: themeDrawer
                 edge: "bottom"
                 open: Visibilities.themes && root.here
@@ -233,6 +257,20 @@ Scope {
                 Session {
                     open: Visibilities.session && root.here
                 }
+            }
+
+            // OSD: on the screen with the active window, out of the way
+            // of the session menu.
+            Drawer {
+                id: osdDrawer
+                edge: "right"
+                open: Osd.shown && Osd.enabled && !(Visibilities.session && root.here)
+                    && (Bridge.activeScreen === root.modelData.name || Quickshell.screens.length === 1)
+                anchors.right: parent.right
+                anchors.rightMargin: Appearance.sizes.border
+                anchors.verticalCenter: parent.verticalCenter
+
+                OsdView {}
             }
 
             Popups {
