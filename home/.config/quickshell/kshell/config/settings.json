@@ -3,8 +3,7 @@
     "backdropBlur": false,
     "baseColor": "",
     "frameOpacity": 0.62,
-    "hiddenTray": [
-    ],
+    "hiddenTray": [],
     "notchClock": "time",
     "notchMedia": false,
     "notchNotifications": false,
@@ -15,5 +14,8 @@
     "transitionDuration": 2600,
     "transitionEffect": "liquid",
     "wallpaperDir": "",
-    "wallpaperTransition": true
+    "wallpaperTransition": true,
+    "colorSource": "kde",
+    "schemeVariant": "tonal-spot",
+    "schemeApps": true
 }

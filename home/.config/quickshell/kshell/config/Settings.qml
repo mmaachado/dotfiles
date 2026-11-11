@@ -44,7 +44,17 @@ Singleton {
             // liquid | fade | wipe | circle | pixelate | dissolve | random
             property string transitionEffect: "liquid"
 
-            // Shell colours. "" = follow the KDE colour scheme.
+            // Where colours come from: kde (the KDE colour scheme, plus the
+            // overrides below) | wallpaper (Material 3 from the wallpaper) |
+            // theme (Material 3 from the active theme's accent).
+            property string colorSource: "kde"
+            // Material 3 scheme variant: tonal-spot | expressive | vibrant |
+            // fidelity | content | rainbow | fruit-salad | neutral | monochrome
+            property string schemeVariant: "tonal-spot"
+            // Recolour Plasma, Qt/GTK apps and kitty with the Material scheme too.
+            property bool schemeApps: true
+
+            // Shell colours when colorSource is kde. "" = follow the KDE colour scheme.
             property string accentColor: ""
             property string baseColor: ""
             // How opaque the shell is in blur themes.

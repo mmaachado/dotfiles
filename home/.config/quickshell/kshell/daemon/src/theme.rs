@@ -1,6 +1,6 @@
 //! Apply a KShell theme to the whole desktop.
 //!
-//!     theme apply <id>   colour scheme, window decoration, Plasma style,
+//!     theme apply <id> [--scheme F]   colour scheme, window decoration, Plasma style,
 //!                        app style (Breeze or Kvantum blur), kitty, shell
 //!     theme current      print the active theme id
 //!     theme list         print the theme ids
@@ -41,6 +41,15 @@ pub struct Palette {
     pub text: Rgb,
     pub text_inactive: Rgb,
     pub accent: Rgb,
+    /// Text on the accent (selection, highlighted tabs). White unless set.
+    #[serde(default)]
+    pub on_accent: Option<Rgb>,
+}
+
+impl Palette {
+    pub fn on_accent(&self) -> Rgb {
+        self.on_accent.unwrap_or(WHITE)
+    }
 }
 
 #[derive(Deserialize, Clone)]
@@ -55,6 +64,13 @@ pub struct Theme {
     pub blur_strength: Option<u32>,
     pub app_translucency: Option<u32>,
     pub palette: Option<Palette>,
+    /// KDE colour scheme name, when the colours come from an M3 scheme.
+    #[serde(skip)]
+    pub scheme_name: Option<String>,
+    /// "<source>|<variant>|<dark>" of that scheme, recorded in theme.json so the
+    /// shell knows which scheme the apps were last painted with.
+    #[serde(skip)]
+    pub scheme_key: Option<String>,
 }
 
 impl Theme {
@@ -111,7 +127,58 @@ fn camel(id: &str) -> String {
 
 /// Blur themes share their base scheme: the colours are identical.
 fn scheme_name(t: &Theme) -> String {
+    if let Some(n) = &t.scheme_name {
+        return n.clone();
+    }
     format!("KShell{}", camel(t.base.as_deref().unwrap_or(&t.id)))
+}
+
+// ── Material 3 scheme (kshelld scheme) as a theme palette ───────────────────
+
+#[derive(Deserialize)]
+struct SchemeFile {
+    source: String,
+    variant: String,
+    dark: bool,
+    colors: HashMap<String, String>,
+}
+
+fn role(colors: &HashMap<String, String>, name: &str) -> Result<Rgb> {
+    let hex = colors.get(name).with_context(|| format!("scheme has no {name}"))?;
+    let v = u32::from_str_radix(hex.trim_start_matches('#'), 16).with_context(|| format!("bad colour {hex}"))?;
+    Ok([(v >> 16) as u8, (v >> 8) as u8, v as u8])
+}
+
+/// Recolour a theme from an M3 scheme. The theme keeps its blur, decoration and
+/// Plasma style; dark/light follows the scheme.
+pub fn with_scheme(mut t: Theme, file: &Path) -> Result<Theme> {
+    let text = std::fs::read_to_string(file).with_context(|| format!("reading {}", file.display()))?;
+    let s: SchemeFile = serde_json::from_str(&text)?;
+    let c = |n| role(&s.colors, n);
+    t.palette = Some(Palette {
+        window: c("surfaceContainer")?,
+        window_alt: c("surfaceContainerHigh")?,
+        view: c("surface")?,
+        view_alt: c("surfaceContainerLow")?,
+        button: c("surfaceContainerHighest")?,
+        button_alt: c("surfaceContainerHigh")?,
+        header: c("surfaceContainer")?,
+        header_inactive: c("surfaceContainerLow")?,
+        tooltip: c("surfaceContainerHigh")?,
+        text: c("onSurface")?,
+        text_inactive: c("onSurfaceVariant")?,
+        accent: c("primary")?,
+        on_accent: Some(c("onPrimary")?),
+    });
+    t.dark = s.dark;
+    t.scheme_key = Some(format!("{}|{}|{}", s.source, s.variant, s.dark));
+    t.name = "Material".into();
+    // plasma-apply-colorscheme does nothing when the scheme's name is already the
+    // active one, so alternate between two names.
+    let active = std::fs::read_to_string(home().join(".config/kdeglobals")).unwrap_or_default();
+    let in_use = active.lines().any(|l| l.trim() == "ColorScheme=KShellMaterialA");
+    t.scheme_name = Some(if in_use { "KShellMaterialB" } else { "KShellMaterialA" }.into());
+    Ok(t)
 }
 
 // ── KDE colour scheme ────────────────────────────────────────────────────────
@@ -146,10 +213,15 @@ fn colour_scheme(t: &Theme) -> String {
 
     let mut header_inactive = group(p.header_inactive, p.window_alt, text);
     set(&mut header_inactive, "ForegroundNormal", rgba(text, 150));
-    let mut selection = group(accent, accent, WHITE);
-    set(&mut selection, "DecorationFocus", "255,255,255".into());
-    set(&mut selection, "DecorationHover", "255,255,255".into());
-    set(&mut selection, "ForegroundInactive", rgb(accent.map(|v| v.saturating_add(80))));
+    let on_accent = p.on_accent();
+    let mut selection = group(accent, accent, on_accent);
+    set(&mut selection, "DecorationFocus", rgb(on_accent));
+    set(&mut selection, "DecorationHover", rgb(on_accent));
+    let selection_inactive = match p.on_accent {
+        Some(c) => rgb(c), // M3: light primaries need the dark onPrimary
+        None => rgb(accent.map(|v| v.saturating_add(80))),
+    };
+    set(&mut selection, "ForegroundInactive", selection_inactive);
 
     let kv = |pairs: &[(&'static str, &str)]| -> Group { pairs.iter().map(|(k, v)| (*k, (*v).to_string())).collect() };
     let short_name = t.name.split_whitespace().last().unwrap_or(&t.name);
@@ -260,7 +332,7 @@ window.text.color={text_hex}
 button.text.color={text_hex}
 disabled.text.color={text_inactive}
 tooltip.text.color={text_hex}
-highlight.text.color=#ffffff
+highlight.text.color={on_accent}
 link.color={accent_hex}
 link.visited.color={text_inactive}
 progress.indicator.text.color={text_hex}
@@ -278,6 +350,7 @@ progress.indicator.text.color={text_hex}
         accent_dim = hexa(accent, 0x99),
         text_hex = hexc(text),
         text_inactive = hexc(p.text_inactive),
+        on_accent = hexc(p.on_accent()),
     )
 }
 
@@ -301,9 +374,9 @@ background {view}
 foreground {text}
 cursor {text}
 selection_background {accent}
-selection_foreground #ffffff
+selection_foreground {on_accent}
 active_tab_background {accent}
-active_tab_foreground #ffffff
+active_tab_foreground {on_accent}
 inactive_tab_background {window}
 inactive_tab_foreground {inactive}
 background_opacity {opacity}
@@ -315,6 +388,7 @@ background_blur {blur}
         accent = hexc(p.accent),
         window = hexc(p.window),
         inactive = hexc(p.text_inactive),
+        on_accent = hexc(p.on_accent()),
         opacity = if t.blur { "0.78" } else { "1.0" },
         blur = if t.blur { 32 } else { 0 },
     );
@@ -405,7 +479,12 @@ async fn apply(t: &Theme) -> Result<()> {
     kitty_theme(t)?;
 
     // 7. shell (Appearance.qml watches this file)
-    let json = serde_json::json!({ "id": t.id, "blur": t.blur, "dark": t.dark });
+    let json = serde_json::json!({
+        "id": t.id,
+        "blur": t.blur,
+        "dark": t.dark,
+        "scheme": t.scheme_key.as_deref().unwrap_or(""),
+    });
     write_atomic(&state.join("theme.json"), &format!("{json}\n"))?;
     Ok(())
 }
@@ -417,13 +496,22 @@ pub async fn run(args: &[String]) -> Result<()> {
     };
     let themes = load(&file)?;
     match args {
-        [cmd, id] if cmd == "apply" => {
+        [cmd, id, rest @ ..] if cmd == "apply" => {
             let t = themes.iter().find(|t| &t.id == id).with_context(|| format!("unknown theme {id}"))?;
-            apply(t).await
+            match rest {
+                [] => apply(t).await,
+                [flag, scheme] if flag == "--scheme" => apply(&with_scheme(t.clone(), Path::new(scheme))?).await,
+                _ => bail!("usage: kshelld theme apply <id> [--scheme FILE]"),
+            }
         }
         // Write the generated files into DIR without touching the desktop (parity tests, previews).
-        [cmd, id, dir] if cmd == "render" => {
+        [cmd, id, dir, rest @ ..] if cmd == "render" => {
             let t = themes.iter().find(|t| &t.id == id).with_context(|| format!("unknown theme {id}"))?;
+            let scheme = match rest {
+                [flag, f] if flag == "--scheme" => Some(with_scheme(t.clone(), Path::new(f))?),
+                _ => None,
+            };
+            let t = scheme.as_ref().unwrap_or(t);
             let dir = Path::new(dir);
             std::fs::create_dir_all(dir)?;
             std::fs::write(dir.join(format!("{}.colors", scheme_name(t))), colour_scheme(t))?;
@@ -447,7 +535,7 @@ pub async fn run(args: &[String]) -> Result<()> {
             }
             Ok(())
         }
-        _ => bail!("usage: kshelld theme [--themes FILE] apply <id> | current | list"),
+        _ => bail!("usage: kshelld theme [--themes FILE] apply <id> [--scheme FILE] | render <id> <dir> [--scheme FILE] | current | list"),
     }
 }
 

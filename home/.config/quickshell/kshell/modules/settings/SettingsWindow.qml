@@ -324,12 +324,63 @@ FloatingWindow {
                 }
             }
 
-            Heading { text: "Shell colours" }
-            Hint {
-                text: "Changes the bar, frame, notch and drawers only. Apps keep the theme's colours."
+            Heading { text: "Colours" }
+
+            Block {
+                label: "Source"
+                description: ({
+                    kde: "The KDE colour scheme (System Settings → Colors & Themes), with the overrides below.",
+                    wallpaper: "Material 3 colours picked from the wallpaper. They follow every wallpaper change.",
+                    theme: "Material 3 colours built around the theme's accent colour.",
+                })[Settings.options.colorSource] ?? ""
+
+                Repeater {
+                    model: [["kde", "KDE scheme"], ["wallpaper", "Wallpaper"], ["theme", "Theme accent"]]
+                    PillButton {
+                        required property var modelData
+                        label: modelData[1]
+                        primary: Settings.options.colorSource === modelData[0]
+                        onClicked: Settings.options.colorSource = modelData[0]
+                    }
+                }
             }
 
             Block {
+                visible: Settings.options.colorSource !== "kde"
+                label: "Style"
+                description: "How the Material scheme spreads colour across the shell."
+
+                Repeater {
+                    model: [["tonal-spot", "Tonal spot"], ["expressive", "Expressive"], ["vibrant", "Vibrant"],
+                        ["fidelity", "Fidelity"], ["content", "Content"], ["rainbow", "Rainbow"],
+                        ["fruit-salad", "Fruit salad"], ["neutral", "Neutral"], ["monochrome", "Monochrome"]]
+                    PillButton {
+                        required property var modelData
+                        label: modelData[1]
+                        primary: Settings.options.schemeVariant === modelData[0]
+                        onClicked: Settings.options.schemeVariant = modelData[0]
+                    }
+                }
+            }
+
+            SettingRow {
+                visible: Settings.options.colorSource !== "kde"
+                icon: "preferences-desktop-color"
+                label: "Recolour apps"
+                description: "Use the Material colours for Plasma, Qt and GTK apps and kitty too, not just the shell."
+                StyledSwitch {
+                    checked: Settings.options.schemeApps
+                    onToggled: Settings.options.schemeApps = !checked
+                }
+            }
+
+            Hint {
+                visible: Settings.options.colorSource === "kde"
+                text: "Accent and background below change the bar, frame, notch and drawers only. Apps keep the theme's colours."
+            }
+
+            Block {
+                visible: Settings.options.colorSource === "kde"
                 label: "Accent"
                 description: Settings.options.accentColor ? Settings.options.accentColor : "Following the theme"
 
@@ -354,6 +405,7 @@ FloatingWindow {
             }
 
             Block {
+                visible: Settings.options.colorSource === "kde"
                 label: "Background"
                 description: Settings.options.baseColor ? Settings.options.baseColor : "Following the theme"
 
