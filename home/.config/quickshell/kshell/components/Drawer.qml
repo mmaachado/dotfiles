@@ -13,18 +13,17 @@ Item {
     readonly property bool horizontal: edge === "top" || edge === "bottom"
     readonly property real contentLength: horizontal ? holder.childrenRect.width : holder.childrenRect.height
     readonly property real contentDepth: horizontal ? holder.childrenRect.height : holder.childrenRect.width
-    property real progress: open ? 1 : 0
+    // Springs out (with a slight bounce) and back in without one.
+    readonly property real progress: Math.max(0, spring.value)
     readonly property real depth: (contentDepth + Appearance.sizes.padding * 2) * progress
     readonly property bool shown: progress > 0
     // The drawer body without its fillets (used for the blur region).
     readonly property Item body: bodyItem
 
-    Behavior on progress {
-        NumberAnimation {
-            duration: root.open ? Appearance.anim.slow : Appearance.anim.normal
-            easing.type: Easing.BezierSpline
-            easing.bezierCurve: root.open ? Appearance.anim.enter : Appearance.anim.exit
-        }
+    Spring {
+        id: spring
+        target: root.open ? 1 : 0
+        preset: root.open ? Appearance.spring.defaultSpatial : Appearance.spring.exit
     }
 
     width: shape.width

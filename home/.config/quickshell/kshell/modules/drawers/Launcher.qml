@@ -38,7 +38,11 @@ Item {
         width: parent.width
         height: Math.max(1, Math.min(count, root.maxRows)) * root.rowHeight
         clip: true
-        model: root.results
+        // ScriptModel diffs each new result list into inserts, removes and
+        // moves, so rows survive typing and can animate to their new place.
+        model: ScriptModel {
+            values: [...root.results]
+        }
         verticalLayoutDirection: ListView.BottomToTop
         highlightMoveDuration: Appearance.anim.fast
         highlight: Rectangle {
@@ -50,6 +54,13 @@ Item {
             NumberAnimation { duration: Appearance.anim.normal; easing.type: Easing.OutCubic }
         }
 
+        add: Transition {
+            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Appearance.anim.fast }
+        }
+        remove: Transition {
+            NumberAnimation { property: "opacity"; to: 0; duration: Appearance.anim.fast }
+        }
+
         delegate: Item {
             id: row
             required property DesktopEntry modelData
@@ -57,6 +68,28 @@ Item {
 
             width: list.width
             height: root.rowHeight
+
+            // FLIP: when typing moves this row, it's drawn where it was and
+            // springs to its new place.
+            property real lastY: 0
+            property bool placed: false
+            Component.onCompleted: Qt.callLater(() => {
+                row.lastY = row.y;
+                row.placed = true;
+            })
+            onYChanged: {
+                if (placed && root.open)
+                    slide.displace(lastY - y);
+                lastY = y;
+            }
+            transform: Translate { y: slide.value }
+
+            Spring {
+                id: slide
+                target: 0
+                preset: Appearance.spring.defaultSpatial
+                epsilon: 0.05
+            }
 
             Icon {
                 id: appIcon

@@ -30,13 +30,12 @@ Scope {
         && (w.output === root.modelData.name || Quickshell.screens.length === 1)
         && (w.maximized || w.fullscreen
             || (w.y - root.modelData.y < root.notchH + 8 && w.x < root.notchRight && w.x + w.width > root.notchLeft)))
-    property real merge: merged ? 1 : 0
-    Behavior on merge {
-        NumberAnimation {
-            duration: Appearance.anim.slow
-            easing.type: Easing.BezierSpline
-            easing.bezierCurve: root.merged ? Appearance.anim.enter : Appearance.anim.exit
-        }
+    // No bounce: the notch must not poke out past flat or past its full height.
+    readonly property real merge: Math.min(1, Math.max(0, mergeSpring.value))
+    Spring {
+        id: mergeSpring
+        target: root.merged ? 1 : 0
+        preset: Appearance.spring.slowEffects
     }
 
     Exclusions {

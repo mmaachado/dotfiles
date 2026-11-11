@@ -26,13 +26,13 @@ Item {
     readonly property real expandedW: dash.implicitWidth + pad * 2
     readonly property real expandedH: dash.implicitHeight + pad * 2
 
-    property real t: expanded ? 1 : 0
-    Behavior on t {
-        NumberAnimation {
-            duration: root.expanded ? Appearance.anim.slow : Appearance.anim.normal
-            easing.type: Easing.BezierSpline
-            easing.bezierCurve: root.expanded ? Appearance.anim.enter : Appearance.anim.exit
-        }
+    // Morph progress. The spring overshoots a little past 1 when opening, so
+    // the island stretches and settles; closing doesn't bounce.
+    readonly property real t: Math.max(0, morph.value)
+    Spring {
+        id: morph
+        target: root.expanded ? 1 : 0
+        preset: root.expanded ? Appearance.spring.defaultSpatial : Appearance.spring.exit
     }
 
     width: shape.width

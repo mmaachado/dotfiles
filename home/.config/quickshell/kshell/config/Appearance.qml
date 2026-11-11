@@ -195,6 +195,22 @@ Singleton {
         readonly property real huge: 40
     }
 
+    // Material 3 Expressive springs, [stiffness, damping ratio] (as in
+    // androidx.compose.material3 MotionScheme / md3e). Spatial ones move
+    // things and may bounce; effects ones fade or recolour and never do.
+    // Used by components/Spring.qml.
+    readonly property QtObject spring: QtObject {
+        readonly property var fastSpatial: [800, 0.6]
+        readonly property var defaultSpatial: [380, 0.8]
+        readonly property var slowSpatial: [200, 0.8]
+        readonly property var fastEffects: [3800, 1]
+        readonly property var defaultEffects: [1600, 1]
+        readonly property var slowEffects: [800, 1]
+        // Leaving / collapsing: quick and without bounce, so nothing
+        // undershoots past closed.
+        readonly property var exit: [800, 1]
+    }
+
     readonly property QtObject anim: QtObject {
         readonly property int fast: Math.round(150 * root.motion)
         readonly property int normal: Math.round(300 * root.motion)
