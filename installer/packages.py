@@ -13,7 +13,7 @@ def installed(pkgs: list[str] | tuple[str, ...]) -> set[str]:
     if not pkgs:
         return set()
     # `pacman -T` prints the deps that are NOT satisfied; it also honours provides.
-    res = subprocess.run(["pacman", "-T", *pkgs], capture_output=True, text=True)
+    res = subprocess.run(["pacman", "-T", *pkgs], capture_output=True, text=True, check=False)
     missing = set(res.stdout.split())
     return set(pkgs) - missing
 
