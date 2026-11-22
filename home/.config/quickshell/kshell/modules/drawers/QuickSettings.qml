@@ -365,12 +365,37 @@ Item {
             }
         }
 
-        WavySlider {
-            width: parent.width - 38
-            visible: Brightness.available
-            icon: Brightness.icon
-            value: Brightness.value
-            onMoved: v => Brightness.set(v)
+        // One brightness slider per monitor, labelled when there are several.
+        // The model is the display names, so a slider isn't recreated (and
+        // its drag cut short) every time brightness values come in.
+        Repeater {
+            model: ScriptModel {
+                values: Brightness.displays.map(d => d.name)
+            }
+
+            Column {
+                id: screenRow
+                required property string modelData
+                readonly property var display: Brightness.displays.find(d => d.name === modelData) ?? null
+
+                width: parent.width - 38
+                spacing: 4
+                visible: display !== null
+
+                StyledText {
+                    visible: Brightness.displays.length > 1
+                    leftPadding: 6
+                    text: screenRow.display?.label || screenRow.modelData
+                    color: Appearance.colors.textDim
+                    font.pointSize: Appearance.font.small
+                }
+                WavySlider {
+                    width: parent.width
+                    icon: Brightness.iconFor(screenRow.display?.value ?? 0)
+                    value: screenRow.display?.value ?? 0
+                    onMoved: v => Brightness.set(screenRow.modelData, v)
+                }
+            }
         }
 
         // Tiles
