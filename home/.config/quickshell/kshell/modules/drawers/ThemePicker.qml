@@ -13,7 +13,8 @@ FocusScope {
     property bool open
     readonly property var selected: Themes.list[view.currentIndex] ?? null
 
-    implicitWidth: 1000
+    property real maxWidth: Infinity
+    implicitWidth: Math.min(1000, maxWidth)
     implicitHeight: content.implicitHeight
 
     onOpenChanged: {

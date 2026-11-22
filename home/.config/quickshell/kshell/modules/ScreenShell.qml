@@ -20,12 +20,17 @@ Scope {
     readonly property bool here: Visibilities.screen === "" || Visibilities.screen === modelData.name
         || Quickshell.screens.length === 1
     readonly property bool drawerOpen: Visibilities.anyOpen && here
+    readonly property bool isPrimary: modelData.name === Displays.primary
 
     // The notch flattens into the frame's top edge while a window is
     // maximized, fullscreen, or close enough to the notch that it would be covered.
     readonly property real notchH: Appearance.sizes.notchHeight
     readonly property real notchLeft: modelData.x + island.x + island.cornerRadius - 8
     readonly property real notchRight: notchLeft + island.collapsedW + 16
+    // Widest a bottom drawer can be and still fit (portrait screens).
+    readonly property real drawerRoom: modelData.width - Appearance.sizes.barWidth - Appearance.sizes.border
+        - 2 * Appearance.sizes.rounding - 2 * Appearance.sizes.padding - 16
+
     readonly property bool merged: Bridge.currentWindows.some(w => !w.minimized
         && (w.output === root.modelData.name || Quickshell.screens.length === 1)
         && (w.maximized || w.fullscreen
@@ -214,6 +219,7 @@ Scope {
                 anchors.horizontalCenterOffset: Appearance.sizes.barWidth / 2 - Appearance.sizes.border / 2
 
                 WallpaperPicker {
+                    maxWidth: root.drawerRoom
                     open: Visibilities.wallpapers && root.here
                 }
             }
@@ -242,6 +248,7 @@ Scope {
                 anchors.horizontalCenterOffset: Appearance.sizes.barWidth / 2 - Appearance.sizes.border / 2
 
                 ThemePicker {
+                    maxWidth: root.drawerRoom
                     open: Visibilities.themes && root.here
                 }
             }
@@ -279,8 +286,8 @@ Scope {
                 anchors.right: parent.right
                 anchors.topMargin: Appearance.sizes.border + 12
                 anchors.rightMargin: Appearance.sizes.border + 12
-                // Only on the primary screen.
-                visible: root.modelData === Quickshell.screens[0]
+                // Only on the primary display (KScreen's, see Displays).
+                visible: root.isPrimary
             }
         }
     }

@@ -15,7 +15,9 @@ Item {
         f => Wallpapers.name(f).toLowerCase().includes(input.text.trim().toLowerCase()))
     readonly property string selected: shown[view.currentIndex] ?? ""
 
-    implicitWidth: 1120
+    // Narrower on portrait screens (ScreenShell sets the room there is).
+    property real maxWidth: Infinity
+    implicitWidth: Math.min(1120, maxWidth)
     implicitHeight: content.implicitHeight
 
     onOpenChanged: {
