@@ -14,7 +14,7 @@ Singleton {
 
     readonly property bool enabled: Settings.options.osd
     property bool shown: false
-    // progress | text
+    // progress | text | brightness (one gauge per monitor, from Brightness)
     property string kind: "progress"
     property string icon: ""
     property string text: ""
@@ -33,6 +33,10 @@ Singleton {
                 } catch (err) {
                     return;
                 }
+                // Brightness gets its own per-monitor OSD (below); with several
+                // monitors Plasma only sends a line of text for it.
+                if (/^(video-)?display-brightness/.test(e.icon ?? ""))
+                    return;
                 root.kind = e.kind;
                 root.icon = e.icon;
                 root.text = e.text ?? "";
@@ -43,6 +47,20 @@ Singleton {
             }
         }
         onExited: if (root.enabled) restart.start()
+    }
+
+    // Brightness keys (and other apps): show every monitor's level. Changes
+    // made from KShell's own sliders don't need an OSD.
+    Connections {
+        target: Brightness
+        function onChanged(name: string, value: real, own: bool): void {
+            if (!root.enabled || own)
+                return;
+            root.kind = "brightness";
+            root.icon = Brightness.icon;
+            root.shown = true;
+            hide.restart();
+        }
     }
 
     Timer {

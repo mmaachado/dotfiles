@@ -68,7 +68,6 @@ Pill {
 
         Icon {
             required property var modelData
-            anchors.horizontalCenter: parent.horizontalCenter
             name: modelData.icon
             size: 18
             color: modelData.dim ? Appearance.colors.textFaint : Appearance.colors.text

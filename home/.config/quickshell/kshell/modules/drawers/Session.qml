@@ -10,6 +10,8 @@ Column {
     id: root
 
     property bool open
+    // The screen edge the menu slides out of; tooltips open away from it.
+    property string edge: "right"
 
     spacing: 14
 
@@ -71,7 +73,7 @@ Column {
             }
 
             Tooltip {
-                x: -width - 14
+                edge: root.edge
                 text: btn.modelData.label
                 shown: btn.activeFocus
             }

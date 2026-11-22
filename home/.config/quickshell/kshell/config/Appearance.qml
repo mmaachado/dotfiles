@@ -171,6 +171,11 @@ Singleton {
         readonly property color error: root.c_error
     }
 
+    // Which screen edge the bar sits on: left | top | right | bottom.
+    readonly property string barPosition: ["left", "top", "right", "bottom"].includes(Settings.options.barPosition)
+        ? Settings.options.barPosition : "left"
+    readonly property bool barVertical: barPosition === "left" || barPosition === "right"
+
     readonly property QtObject sizes: QtObject {
         readonly property int barWidth: 52
         readonly property int border: 10
@@ -187,7 +192,9 @@ Singleton {
 
     readonly property QtObject font: QtObject {
         readonly property string family: Qt.application.font.family
-        readonly property string mono: "JetBrains Mono"
+        // fontconfig picks droid's monospace font (Google Sans Code, see
+        // ~/.config/fontconfig/conf.d/60-droid-fonts.conf).
+        readonly property string mono: "monospace"
         readonly property real small: 9
         readonly property real normal: 10.5
         readonly property real large: 13

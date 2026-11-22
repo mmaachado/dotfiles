@@ -63,5 +63,14 @@ def kshell_running() -> bool:
     return res.returncode == 0
 
 
-def kshell(action: str, dry_run: bool) -> bool:
-    return run([str(KSHELL), action], dry_run) == 0
+def kshell(action: str, dry_run: bool, *args: str) -> bool:
+    return run([str(KSHELL), action, *args], dry_run) == 0
+
+
+def font_match(alias: str) -> str | None:
+    """The family fontconfig picks for an alias such as sans-serif."""
+    if not shutil.which("fc-match"):
+        return None
+    out = subprocess.run(["fc-match", "-f", "%{family[0]}", alias], capture_output=True, text=True,
+                         check=False).stdout
+    return out.strip() or None

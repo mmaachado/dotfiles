@@ -2,13 +2,79 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 
 Singleton {
     id: root
 
     readonly property list<DesktopEntry> all: DesktopEntries.applications.values
-        .filter(a => !a.noDisplay)
+        .filter(a => !a.noDisplay && root.installed(a))
         .sort((a, b) => a.name.localeCompare(b.name))
+
+    // ── Entries for apps that aren't installed ───────────────────────
+    // Leftover .desktop files (an uninstalled Flatpak's launcher, a program
+    // that's gone) still sit in the applications folders. `check` finds the
+    // installed Flatpaks and the programs that can't be found; until it has
+    // run, everything counts as installed.
+    property var flatpaks: null // ids, or null before the first check
+    property var missingPrograms: []
+
+    function flatpakId(app: DesktopEntry): string {
+        const cmd = app.command ?? [];
+        const run = cmd.indexOf("run");
+        if (!cmd.length || !String(cmd[0]).endsWith("flatpak") || run < 0)
+            return "";
+        return cmd.slice(run + 1).find(a => !String(a).startsWith("-") && !String(a).startsWith("@@")) ?? "";
+    }
+
+    function program(app: DesktopEntry): string {
+        const cmd = app.command ?? [];
+        let i = 0;
+        // env VAR=value program ...
+        if (cmd[0] === "env" || String(cmd[0]).endsWith("/env"))
+            for (i = 1; i < cmd.length && String(cmd[i]).includes("="); i++) {}
+        return cmd[i] ? String(cmd[i]) : "";
+    }
+
+    function installed(app: DesktopEntry): bool {
+        const fp = root.flatpakId(app);
+        if (fp && root.flatpaks !== null)
+            return root.flatpaks.includes(fp);
+        return !root.missingPrograms.includes(root.program(app));
+    }
+
+    readonly property var programs: {
+        const set = new Set();
+        for (const a of DesktopEntries.applications.values)
+            if (!a.noDisplay && root.program(a))
+                set.add(root.program(a));
+        return [...set];
+    }
+    onProgramsChanged: recheck.restart()
+
+    Timer {
+        id: recheck
+        interval: 500
+        onTriggered: {
+            check.running = false;
+            check.running = true;
+        }
+    }
+
+    Process {
+        id: check
+        command: ["sh", "-c", `
+            flatpak list --app --columns=application 2>/dev/null
+            echo --
+            for p; do command -v "$p" >/dev/null 2>&1 || echo "$p"; done`, "sh", ...root.programs]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const [fp, missing] = text.split("--\n");
+                root.flatpaks = (fp ?? "").split("\n").filter(l => l);
+                root.missingPrograms = (missing ?? "").split("\n").filter(l => l);
+            }
+        }
+    }
 
     function score(app: DesktopEntry, q: string): int {
         const name = app.name.toLowerCase();

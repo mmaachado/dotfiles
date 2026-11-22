@@ -70,11 +70,20 @@ Singleton {
             // Status icons in the bar: ethernet, wifi, bluetooth, sound, battery, power.
             property list<string> statusIcons: ["ethernet", "sound"]
 
+            // Which screen edge the bar sits on: left | top | right | bottom.
+            property string barPosition: "left"
+            // Show KWin's virtual desktops in the bar.
+            property bool barDesktops: true
+
             // Multiple displays: where the bar and the notch show (all |
             // primary), and where notification popups appear (primary | active).
             property string barDisplays: "all"
             property string notchDisplays: "all"
             property string popupDisplays: "primary"
+
+            // System icons (droid-icons): rounded | outlined | sharp, filled or not.
+            property string iconStyle: "rounded"
+            property bool iconFilled: true
 
             // Draw KShell's own OSD (volume, brightness, ...) instead of Plasma's.
             property bool osd: true

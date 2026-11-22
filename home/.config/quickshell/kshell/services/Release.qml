@@ -18,6 +18,10 @@ Singleton {
     property string plasma: ""
     property string quickshell: ""
     readonly property string repo: "https://github.com/mmaachado/droid"
+    // The droid repo on disk, and this major version's art in it
+    // (assets/droid_<codename>.svg), if there is one.
+    property string repoRoot: ""
+    readonly property string art: repoRoot && codename ? `${repoRoot}/assets/droid_${codename.toLowerCase()}.svg` : ""
 
     function value(text: string, key: string): string {
         const table = text.match(/^\[release\]\s*$([\s\S]*?)(?=^\[|$(?![\s\S]))/m);
@@ -27,9 +31,11 @@ Singleton {
 
     Process {
         running: true
-        command: ["sh", "-c", 'cat "$(readlink -f "$1")/../../../../droid.toml"', "sh", Quickshell.shellDir]
+        command: ["sh", "-c", 'root=$(cd "$(readlink -f "$1")/../../../.." && pwd) && echo "$root" && cat "$root/droid.toml"',
+            "sh", Quickshell.shellDir]
         stdout: StdioCollector {
             onStreamFinished: {
+                root.repoRoot = text.split("\n")[0];
                 root.name = root.value(text, "name") || "droid";
                 root.version = root.value(text, "version");
                 root.codename = root.value(text, "codename");

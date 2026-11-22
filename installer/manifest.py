@@ -36,9 +36,25 @@ class Group:
 
 
 @dataclass(frozen=True)
+class FontFile:
+    name: str
+    url: str
+    sha256: str
+
+
+@dataclass(frozen=True)
+class Font:
+    """A font the installer downloads itself (not packaged in the repos)."""
+
+    family: str
+    files: tuple[FontFile, ...]
+
+
+@dataclass(frozen=True)
 class Manifest:
     release: Release
     groups: dict[str, Group]
+    fonts: tuple[Font, ...]
     links: tuple[str, ...]
     wallpapers: Path
 
@@ -88,5 +104,16 @@ def load(path: Path = MANIFEST) -> Manifest:
         if not (HOME_TREE / p).exists():
             raise ManifestError(f"link source missing in repo: home/{rel}")
 
+    fonts = []
+    for f in data.get("fonts", []):
+        try:
+            files = tuple(FontFile(x["name"], x["url"], x["sha256"]) for x in f["files"])
+            fonts.append(Font(family=f["family"], files=files))
+        except (KeyError, TypeError) as e:
+            raise ManifestError(f"[[fonts]] entry is incomplete: {e}") from e
+        for x in files:
+            if "/" in x.name or x.name.startswith("."):
+                raise ManifestError(f"font file name must be a plain name: {x.name}")
+
     wallpapers = Path(data.get("wallpapers", {}).get("dir", "~/Pictures/Wallpapers")).expanduser()
-    return Manifest(release=release, groups=groups, links=links, wallpapers=wallpapers)
+    return Manifest(release=release, groups=groups, fonts=tuple(fonts), links=links, wallpapers=wallpapers)
