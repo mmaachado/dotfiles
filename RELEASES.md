@@ -9,7 +9,7 @@ version and codename live in [`droid.toml`](droid.toml).
 
 <img src="assets/droid_cupcake.svg" alt="Cupcake" width="120" align="right">
 
-### 1.1.0 (unreleased)
+### 1.1.0
 
 - **Google Sans everywhere**: Google Sans Flex for the interface and Google
   Sans Code for monospace, set for KDE, GTK, fontconfig, kitty and KShell

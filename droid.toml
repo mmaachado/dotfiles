@@ -3,7 +3,7 @@
 
 [release]
 name = "droid"
-version = "1.0.0"
+version = "1.1.0"
 # Each major version takes the next Android dessert (1.x Cupcake, 2.x Donut,
 # then Eclair, ...); minor releases keep the codename. See RELEASES.md.
 codename = "Cupcake"
