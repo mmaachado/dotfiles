@@ -71,7 +71,7 @@ Column {
             }
 
             Tooltip {
-                x: -width - 14
+                edge: "right"
                 text: btn.modelData.label
                 shown: btn.activeFocus
             }

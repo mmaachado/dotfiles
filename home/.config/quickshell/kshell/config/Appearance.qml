@@ -171,6 +171,10 @@ Singleton {
         readonly property color error: root.c_error
     }
 
+    // Which screen edge the bar sits on: left | top | right | bottom.
+    readonly property string barPosition: "left"
+    readonly property bool barVertical: barPosition === "left" || barPosition === "right"
+
     readonly property QtObject sizes: QtObject {
         readonly property int barWidth: 52
         readonly property int border: 10

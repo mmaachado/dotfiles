@@ -14,9 +14,13 @@ Pill {
     spacing: 6
     padding: 10
 
+    // Positions run along the bar: y in a vertical bar, x in a horizontal one.
+    function along(item: Item): real {
+        return root.vertical ? root.column.y + (item?.y ?? 0) : root.column.x + (item?.x ?? 0);
+    }
     readonly property Item currentCell: cells.itemAt(Math.max(0, Bridge.currentIndex))
-    readonly property real cellTop: root.column.y + (currentCell?.y ?? 0)
-    readonly property real cellBottom: cellTop + (currentCell?.height ?? 0)
+    readonly property real cellTop: along(currentCell)
+    readonly property real cellBottom: cellTop + (vertical ? currentCell?.height ?? 0 : currentCell?.width ?? 0)
     property bool movingDown: true
     readonly property var lead: [900, 0.7]
     readonly property var trail: [260, 0.85]
@@ -24,8 +28,7 @@ Pill {
     Connections {
         target: Bridge
         function onCurrentIndexChanged() {
-            const y = root.column.y + (cells.itemAt(Math.max(0, Bridge.currentIndex))?.y ?? 0);
-            root.movingDown = y >= top.value;
+            root.movingDown = root.along(cells.itemAt(Math.max(0, Bridge.currentIndex))) >= top.value;
         }
     }
 
@@ -45,11 +48,11 @@ Pill {
     Rectangle {
         parent: root // not into the column: it floats behind the cells
         visible: Bridge.currentIndex >= 0
-        x: root.column.x
-        y: top.value
-        width: root.column.width
-        height: Math.max(width, bottom.value - top.value)
-        radius: width / 2
+        x: root.vertical ? root.column.x : top.value
+        y: root.vertical ? top.value : root.column.y
+        width: root.vertical ? root.column.width : Math.max(height, bottom.value - top.value)
+        height: root.vertical ? Math.max(width, bottom.value - top.value) : root.column.height
+        radius: Math.min(width, height) / 2
         color: Appearance.colors.primary
     }
 
@@ -64,11 +67,12 @@ Pill {
             readonly property bool current: modelData.id === Bridge.current
             readonly property bool occupied: Bridge.hasWindows(modelData.id)
 
-            width: 24
-            height: heightSpring.value
+            // The current desktop's cell grows along the bar.
+            width: root.vertical ? 24 : lengthSpring.value
+            height: root.vertical ? lengthSpring.value : 24
 
             Spring {
-                id: heightSpring
+                id: lengthSpring
                 target: ws.current ? 40 : 24
                 preset: Appearance.spring.defaultSpatial
                 epsilon: 0.05
@@ -84,7 +88,7 @@ Pill {
 
             StateLayer {
                 id: wsLayer
-                radius: width / 2
+                radius: Math.min(width, height) / 2
                 onClicked: Bridge.switchDesktop(ws.modelData.id)
             }
 

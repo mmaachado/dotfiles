@@ -1,15 +1,17 @@
 import QtQuick
 import qs.config
 
-// Tooltip shown to the right of its parent (for the left bar).
+// Tooltip that opens away from the screen edge its parent sits on (the
+// bar's edge unless set), so it always points into the screen.
 Rectangle {
     id: root
 
     property string text
     property bool shown
+    property string edge: Appearance.barPosition
 
-    x: parent.width + 14
-    anchors.verticalCenter: parent.verticalCenter
+    x: edge === "left" ? parent.width + 14 : edge === "right" ? -width - 14 : (parent.width - width) / 2
+    y: edge === "top" ? parent.height + 14 : edge === "bottom" ? -height - 14 : (parent.height - height) / 2
     z: 100
     implicitWidth: label.implicitWidth + 20
     implicitHeight: label.implicitHeight + 12

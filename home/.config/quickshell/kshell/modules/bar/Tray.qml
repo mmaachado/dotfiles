@@ -49,7 +49,11 @@ Pill {
                         item.secondaryActivate();
                     } else if (mouse.button === Qt.RightButton || item.onlyMenu) {
                         if (item.hasMenu) {
-                            const p = entry.mapToItem(null, entry.width + 14, 0);
+                            // Next to the icon, on the side away from the screen edge.
+                            const edge = Appearance.barPosition;
+                            const p = entry.mapToItem(null,
+                                edge === "left" ? entry.width + 14 : edge === "right" ? -254 : 0,
+                                edge === "top" ? entry.height + 14 : edge === "bottom" ? -14 : 0);
                             item.display(QsWindow.window, p.x, p.y);
                         }
                     } else {
