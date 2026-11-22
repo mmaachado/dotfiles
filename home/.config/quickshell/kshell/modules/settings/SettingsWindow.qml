@@ -23,6 +23,7 @@ FloatingWindow {
         { name: "Tray", icon: "preferences-desktop-notification-symbolic" },
         { name: "Dock", icon: "view-pin-symbolic" },
         { name: "Wallpaper", icon: "preferences-desktop-wallpaper-symbolic" },
+        { name: "Displays", icon: "video-display-symbolic" },
     ]
 
     title: "KShell Settings"
@@ -157,7 +158,7 @@ FloatingWindow {
             }
 
             Loader {
-                sourceComponent: [appearancePage, notchPage, trayPage, dockPage, wallpaperPage][Settings.page]
+                sourceComponent: [appearancePage, notchPage, trayPage, dockPage, wallpaperPage, displaysPage][Settings.page]
             }
         }
     }
@@ -626,6 +627,14 @@ FloatingWindow {
                 visible: Dock.pinned.length === 0
                 text: "Nothing is pinned."
             }
+        }
+    }
+
+    Component {
+        id: displaysPage
+
+        DisplaysPage {
+            width: content.width
         }
     }
 
