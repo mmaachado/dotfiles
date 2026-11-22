@@ -1,0 +1,43 @@
+name: Release
+
+# Runs when a version tag is pushed (e.g. `git tag v1.0.0 && git push origin v1.0.0`).
+# The release is named after droid.toml: "droid 1.0.0 (Cupcake)".
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read droid.toml
+        id: meta
+        run: |
+          python3 - >> "$GITHUB_OUTPUT" <<'PY'
+          import tomllib
+          from pathlib import Path
+
+          r = tomllib.loads(Path("droid.toml").read_text())["release"]
+          print(f"name={r['name']}")
+          print(f"version={r['version']}")
+          print(f"codename={r['codename']}")
+          PY
+      - name: Tag matches droid.toml
+        env:
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          if [ "$TAG" != "v$VERSION" ]; then
+            echo "::error::Tag $TAG doesn't match droid.toml's version $VERSION (expected v$VERSION)"
+            exit 1
+          fi
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          TITLE: ${{ steps.meta.outputs.name }} ${{ steps.meta.outputs.version }} (${{ steps.meta.outputs.codename }})
+        run: gh release create "$TAG" --title "$TITLE" --generate-notes --verify-tag

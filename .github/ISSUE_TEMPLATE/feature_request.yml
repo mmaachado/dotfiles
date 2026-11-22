@@ -1,0 +1,39 @@
+name: Feature request
+description: An idea to make droid better.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What's missing or awkward today?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: How it could work. Screenshots or mockups from Android are welcome.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Bar
+        - Notch / dashboard
+        - Drawers
+        - Notifications / OSD
+        - Settings window
+        - Wallpaper
+        - Displays / multiple monitors
+        - Theming / colours
+        - kshelld (backend)
+        - Installer
+        - Other
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Other ways around it you've considered.

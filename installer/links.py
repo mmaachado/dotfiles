@@ -10,8 +10,10 @@ from pathlib import Path
 
 from .manifest import HOME_TREE
 
-STATE = Path.home() / ".local/state/dotfiles"
+STATE = Path.home() / ".local/state/droid"
 BACKUPS = STATE / "backup"
+# Where backups went before the project was renamed from dotfiles.
+OLD_BACKUPS = Path.home() / ".local/state/dotfiles/backup"
 
 
 class Status(str, Enum):
@@ -49,8 +51,11 @@ def new_backup_dir() -> Path:
 
 
 def latest_backup() -> Path | None:
-    dirs = sorted(p for p in BACKUPS.glob("*") if p.is_dir()) if BACKUPS.exists() else []
-    return dirs[-1] if dirs else None
+    for root in (BACKUPS, OLD_BACKUPS):
+        dirs = sorted(p for p in root.glob("*") if p.is_dir()) if root.exists() else []
+        if dirs:
+            return dirs[-1]
+    return None
 
 
 def _move_to_backup(link: Link, backup: Path, dry_run: bool) -> None:

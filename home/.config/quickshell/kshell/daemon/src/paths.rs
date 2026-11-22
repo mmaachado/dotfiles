@@ -1,7 +1,9 @@
 use std::path::{Path, PathBuf};
 
 pub fn home() -> PathBuf {
-    std::env::var_os("HOME").map(PathBuf::from).unwrap_or_else(|| "/".into())
+    std::env::var_os("HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| "/".into())
 }
 
 /// ~/.local/state/kshell: written by kshelld, watched by the shell.

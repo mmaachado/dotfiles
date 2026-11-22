@@ -1,1 +1,1 @@
-"""Installer for the KShell dotfiles (KDE Plasma + Quickshell)."""
+"""Installer for droid, a Plasma-based Quickshell desktop."""

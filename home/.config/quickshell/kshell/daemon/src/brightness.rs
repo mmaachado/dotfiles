@@ -24,21 +24,36 @@ const DISPLAY: &str = "org.kde.ScreenBrightness.Display";
 /// SetBrightness flag: don't show Plasma's brightness OSD.
 const SUPPRESS_INDICATOR: u32 = 0x1;
 
-async fn prop(conn: &Connection, path: &str, iface: &str, name: &str) -> zbus::Result<zbus::OwnedVariant> {
+async fn prop(
+    conn: &Connection,
+    path: &str,
+    iface: &str,
+    name: &str,
+) -> zbus::Result<zbus::OwnedVariant> {
     let reply = conn
-        .call_method(Some(SVC), path, Some("org.freedesktop.DBus.Properties"), "Get", &(iface, name))
+        .call_method(
+            Some(SVC),
+            path,
+            Some("org.freedesktop.DBus.Properties"),
+            "Get",
+            &(iface, name),
+        )
         .await?;
     let v: zbus::OwnedVariant = reply.body().deserialize()?;
     Ok(v)
 }
 
 async fn displays(conn: &Connection) -> Result<Vec<Value>> {
-    let names: Vec<String> = prop(conn, ROOT, IFACE, "DisplaysDBusNames").await?.try_into()?;
+    let names: Vec<String> = prop(conn, ROOT, IFACE, "DisplaysDBusNames")
+        .await?
+        .try_into()?;
     let mut out = Vec::new();
     for name in names {
         let path = format!("{ROOT}/{name}");
         let brightness: i32 = prop(conn, &path, DISPLAY, "Brightness").await?.try_into()?;
-        let max: i32 = prop(conn, &path, DISPLAY, "MaxBrightness").await?.try_into()?;
+        let max: i32 = prop(conn, &path, DISPLAY, "MaxBrightness")
+            .await?
+            .try_into()?;
         let label: String = prop(conn, &path, DISPLAY, "Label").await?.try_into()?;
         let internal: bool = prop(conn, &path, DISPLAY, "IsInternal").await?.try_into()?;
         out.push(json!({ "name": name, "label": label, "brightness": brightness, "max": max, "internal": internal }));
@@ -63,16 +78,28 @@ async fn emit_state(conn: &Connection) -> bool {
 
 async fn set(conn: &Connection, name: &str, fraction: f64) -> Result<()> {
     let path = format!("{ROOT}/{name}");
-    let max: i32 = prop(conn, &path, DISPLAY, "MaxBrightness").await?.try_into()?;
+    let max: i32 = prop(conn, &path, DISPLAY, "MaxBrightness")
+        .await?
+        .try_into()?;
     let value = (fraction.clamp(0.0, 1.0) * f64::from(max)).round() as i32;
-    conn.call_method(Some(SVC), path.as_str(), Some(DISPLAY), "SetBrightnessWithContext", &(value, SUPPRESS_INDICATOR, "kshell"))
-        .await?;
+    conn.call_method(
+        Some(SVC),
+        path.as_str(),
+        Some(DISPLAY),
+        "SetBrightnessWithContext",
+        &(value, SUPPRESS_INDICATOR, "kshell"),
+    )
+    .await?;
     Ok(())
 }
 
 pub async fn run(_args: &[String]) -> Result<()> {
     let conn = Connection::session().await?;
-    let rule = MatchRule::builder().msg_type(Type::Signal).interface(IFACE).path(ROOT).build()?;
+    let rule = MatchRule::builder()
+        .msg_type(Type::Signal)
+        .interface(IFACE)
+        .path(ROOT)
+        .build()?;
     let mut signals = MessageStream::for_match_rule(rule, &conn, None).await?;
     let mut stdin = BufReader::new(tokio::io::stdin()).lines();
 

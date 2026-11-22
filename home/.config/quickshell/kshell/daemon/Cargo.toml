@@ -1,6 +1,6 @@
 [package]
 name = "kshelld"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
 description = "Backend daemon for KShell: KWin bridge, theme apply, global shortcuts, Material 3 schemes"
 license = "MIT"

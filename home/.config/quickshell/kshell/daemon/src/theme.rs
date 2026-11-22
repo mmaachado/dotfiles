@@ -86,14 +86,25 @@ struct ThemesFile {
 
 /// Load the themes; blur variants inherit their base palette.
 pub fn load(file: &Path) -> Result<Vec<Theme>> {
-    let text = std::fs::read_to_string(file).with_context(|| format!("reading {}", file.display()))?;
+    let text =
+        std::fs::read_to_string(file).with_context(|| format!("reading {}", file.display()))?;
     let mut themes = serde_json::from_str::<ThemesFile>(&text)?.themes;
-    let palettes: HashMap<String, Palette> =
-        themes.iter().filter_map(|t| Some((t.id.clone(), t.palette.clone()?))).collect();
+    let palettes: HashMap<String, Palette> = themes
+        .iter()
+        .filter_map(|t| Some((t.id.clone(), t.palette.clone()?)))
+        .collect();
     for t in &mut themes {
         if t.palette.is_none() {
-            let base = t.base.as_deref().with_context(|| format!("theme {} has no palette or base", t.id))?;
-            t.palette = Some(palettes.get(base).with_context(|| format!("unknown base {base}"))?.clone());
+            let base = t
+                .base
+                .as_deref()
+                .with_context(|| format!("theme {} has no palette or base", t.id))?;
+            t.palette = Some(
+                palettes
+                    .get(base)
+                    .with_context(|| format!("unknown base {base}"))?
+                    .clone(),
+            );
         }
     }
     Ok(themes)
@@ -119,7 +130,13 @@ fn camel(id: &str) -> String {
     id.split('-')
         .map(|p| {
             let mut c = p.chars();
-            c.next().map(|f| f.to_uppercase().chain(c.flat_map(char::to_lowercase)).collect()).unwrap_or_default()
+            c.next()
+                .map(|f| {
+                    f.to_uppercase()
+                        .chain(c.flat_map(char::to_lowercase))
+                        .collect()
+                })
+                .unwrap_or_default()
         })
         .collect::<Vec<String>>()
         .concat()
@@ -144,15 +161,19 @@ struct SchemeFile {
 }
 
 fn role(colors: &HashMap<String, String>, name: &str) -> Result<Rgb> {
-    let hex = colors.get(name).with_context(|| format!("scheme has no {name}"))?;
-    let v = u32::from_str_radix(hex.trim_start_matches('#'), 16).with_context(|| format!("bad colour {hex}"))?;
+    let hex = colors
+        .get(name)
+        .with_context(|| format!("scheme has no {name}"))?;
+    let v = u32::from_str_radix(hex.trim_start_matches('#'), 16)
+        .with_context(|| format!("bad colour {hex}"))?;
     Ok([(v >> 16) as u8, (v >> 8) as u8, v as u8])
 }
 
 /// Recolour a theme from an M3 scheme. The theme keeps its blur, decoration and
 /// Plasma style; dark/light follows the scheme.
 pub fn with_scheme(mut t: Theme, file: &Path) -> Result<Theme> {
-    let text = std::fs::read_to_string(file).with_context(|| format!("reading {}", file.display()))?;
+    let text =
+        std::fs::read_to_string(file).with_context(|| format!("reading {}", file.display()))?;
     let s: SchemeFile = serde_json::from_str(&text)?;
     let c = |n| role(&s.colors, n);
     t.palette = Some(Palette {
@@ -176,8 +197,17 @@ pub fn with_scheme(mut t: Theme, file: &Path) -> Result<Theme> {
     // plasma-apply-colorscheme does nothing when the scheme's name is already the
     // active one, so alternate between two names.
     let active = std::fs::read_to_string(home().join(".config/kdeglobals")).unwrap_or_default();
-    let in_use = active.lines().any(|l| l.trim() == "ColorScheme=KShellMaterialA");
-    t.scheme_name = Some(if in_use { "KShellMaterialB" } else { "KShellMaterialA" }.into());
+    let in_use = active
+        .lines()
+        .any(|l| l.trim() == "ColorScheme=KShellMaterialA");
+    t.scheme_name = Some(
+        if in_use {
+            "KShellMaterialB"
+        } else {
+            "KShellMaterialA"
+        }
+        .into(),
+    );
     Ok(t)
 }
 
@@ -223,7 +253,9 @@ fn colour_scheme(t: &Theme) -> String {
     };
     set(&mut selection, "ForegroundInactive", selection_inactive);
 
-    let kv = |pairs: &[(&'static str, &str)]| -> Group { pairs.iter().map(|(k, v)| (*k, (*v).to_string())).collect() };
+    let kv = |pairs: &[(&'static str, &str)]| -> Group {
+        pairs.iter().map(|(k, v)| (*k, (*v).to_string())).collect()
+    };
     let short_name = t.name.split_whitespace().last().unwrap_or(&t.name);
     let groups: Vec<(&str, Group)> = vec![
         ("Colors:Window", group(p.window, p.window_alt, text)),
@@ -245,7 +277,10 @@ fn colour_scheme(t: &Theme) -> String {
                 ("IntensityEffect", "2"),
             ]),
         ),
-        ("ColorEffects:Inactive", kv(&[("ChangeSelectionColor", "true"), ("Enable", "false")])),
+        (
+            "ColorEffects:Inactive",
+            kv(&[("ChangeSelectionColor", "true"), ("Enable", "false")]),
+        ),
         (
             "General",
             vec![
@@ -286,11 +321,16 @@ fn kvantum_theme(t: &Theme, kvantum: &Path) -> Result<String> {
     let folder = kvantum.join(&name);
     std::fs::create_dir_all(&folder)?;
     let base_name = if t.dark { "KvFlat" } else { "KvFlatLight" }; // SVG graphics we reuse
-    let svg = Path::new("/usr/share/Kvantum").join(base_name).join(format!("{base_name}.svg"));
+    let svg = Path::new("/usr/share/Kvantum")
+        .join(base_name)
+        .join(format!("{base_name}.svg"));
     if svg.exists() {
         std::fs::copy(&svg, folder.join(format!("{name}.svg")))?;
     }
-    std::fs::write(folder.join(format!("{name}.kvconfig")), kvantum_conf(t, base_name))?;
+    std::fs::write(
+        folder.join(format!("{name}.kvconfig")),
+        kvantum_conf(t, base_name),
+    )?;
     Ok(name)
 }
 
@@ -357,12 +397,12 @@ progress.indicator.text.color={text_hex}
 // ── kitty ────────────────────────────────────────────────────────────────────
 
 const ANSI_DARK: [&str; 16] = [
-    "#1d1f21", "#cc6666", "#b5bd68", "#f0c674", "#81a2be", "#b294bb", "#8abeb7", "#c5c8c6", "#666666", "#d54e53",
-    "#b9ca4a", "#e7c547", "#7aa6da", "#c397d8", "#70c0b1", "#eaeaea",
+    "#1d1f21", "#cc6666", "#b5bd68", "#f0c674", "#81a2be", "#b294bb", "#8abeb7", "#c5c8c6",
+    "#666666", "#d54e53", "#b9ca4a", "#e7c547", "#7aa6da", "#c397d8", "#70c0b1", "#eaeaea",
 ];
 const ANSI_LIGHT: [&str; 16] = [
-    "#2b2b2b", "#c82829", "#718c00", "#b07d00", "#4271ae", "#8959a8", "#3e999f", "#8e908c", "#5f5f5f", "#c82829",
-    "#5b7a00", "#a06a00", "#3465a4", "#75507b", "#06989a", "#4d4d4c",
+    "#2b2b2b", "#c82829", "#718c00", "#b07d00", "#4271ae", "#8959a8", "#3e999f", "#8e908c",
+    "#5f5f5f", "#c82829", "#5b7a00", "#a06a00", "#3465a4", "#75507b", "#06989a", "#4d4d4c",
 ];
 
 fn kitty_conf(t: &Theme) -> String {
@@ -407,11 +447,22 @@ fn kitty_theme(t: &Theme) -> Result<()> {
 // ── apply ────────────────────────────────────────────────────────────────────
 
 fn exec(cmd: &[&str]) {
-    let _ = Command::new(cmd[0]).args(&cmd[1..]).stdout(Stdio::null()).status();
+    let _ = Command::new(cmd[0])
+        .args(&cmd[1..])
+        .stdout(Stdio::null())
+        .status();
 }
 
 fn kwrite(file: &str, group: &str, key: &str, value: Option<&str>) {
-    let mut cmd = vec!["kwriteconfig6", "--file", file, "--group", group, "--key", key];
+    let mut cmd = vec![
+        "kwriteconfig6",
+        "--file",
+        file,
+        "--group",
+        group,
+        "--key",
+        key,
+    ];
     cmd.push(value.unwrap_or("--delete"));
     exec(&cmd);
 }
@@ -420,8 +471,17 @@ fn first_existing(dirs: &[PathBuf], name: &str) -> bool {
     dirs.iter().any(|d| d.join(name).is_dir())
 }
 
-async fn kwin(conn: &Connection, path: &str, iface: &str, method: &str, body: &(impl serde::Serialize + zbus::zvariant::DynamicType)) {
-    if let Err(e) = conn.call_method(Some("org.kde.KWin"), path, Some(iface), method, body).await {
+async fn kwin(
+    conn: &Connection,
+    path: &str,
+    iface: &str,
+    method: &str,
+    body: &(impl serde::Serialize + zbus::zvariant::DynamicType),
+) {
+    if let Err(e) = conn
+        .call_method(Some("org.kde.KWin"), path, Some(iface), method, body)
+        .await
+    {
         eprintln!("kshelld: KWin {method}: {e}");
     }
 }
@@ -441,10 +501,20 @@ async fn apply(t: &Theme) -> Result<()> {
     exec(&["plasma-apply-colorscheme", &name]);
 
     // 2. window decoration: MacVentura aurorae if installed, else Breeze
-    let aurorae = [home.join(".local/share/aurorae/themes"), "/usr/share/aurorae/themes".into()];
-    let variant = if t.dark { "MacVentura-Dark" } else { "MacVentura-Light" };
+    let aurorae = [
+        home.join(".local/share/aurorae/themes"),
+        "/usr/share/aurorae/themes".into(),
+    ];
+    let variant = if t.dark {
+        "MacVentura-Dark"
+    } else {
+        "MacVentura-Light"
+    };
     let (library, deco) = if first_existing(&aurorae, variant) {
-        ("org.kde.kwin.aurorae.v2", format!("__aurorae__svg__{variant}"))
+        (
+            "org.kde.kwin.aurorae.v2",
+            format!("__aurorae__svg__{variant}"),
+        )
     } else {
         ("org.kde.breeze", "Breeze".into())
     };
@@ -453,27 +523,55 @@ async fn apply(t: &Theme) -> Result<()> {
     kwin(&conn, "/KWin", "org.kde.KWin", "reconfigure", &()).await;
 
     // 3. Plasma style (OSDs, KRunner): "default" follows the colour scheme
-    let themes = [home.join(".local/share/plasma/desktoptheme"), "/usr/share/plasma/desktoptheme".into()];
-    let style = t.plasma_style.as_deref().filter(|s| first_existing(&themes, s)).unwrap_or("default");
+    let themes = [
+        home.join(".local/share/plasma/desktoptheme"),
+        "/usr/share/plasma/desktoptheme".into(),
+    ];
+    let style = t
+        .plasma_style
+        .as_deref()
+        .filter(|s| first_existing(&themes, s))
+        .unwrap_or("default");
     exec(&["plasma-apply-desktoptheme", style]);
 
     // 4. app style: Kvantum with translucency + blur for blur themes, Breeze otherwise
     let widget = if t.blur && in_path("kvantummanager") {
         let kv = kvantum_theme(t, &kvantum)?;
-        kwrite(kvantum.join("kvantum.kvconfig").to_str().unwrap_or_default(), "General", "theme", Some(&kv));
+        kwrite(
+            kvantum
+                .join("kvantum.kvconfig")
+                .to_str()
+                .unwrap_or_default(),
+            "General",
+            "theme",
+            Some(&kv),
+        );
         "kvantum"
     } else {
         "Breeze"
     };
     kwrite("kdeglobals", "KDE", "widgetStyle", Some(widget));
     // KGlobalSettings::StyleChanged → running KDE apps switch style
-    conn.emit_signal(None::<()>, "/KGlobalSettings", "org.kde.KGlobalSettings", "notifyChange", &(2i32, 0i32))
-        .await?;
+    conn.emit_signal(
+        None::<()>,
+        "/KGlobalSettings",
+        "org.kde.KGlobalSettings",
+        "notifyChange",
+        &(2i32, 0i32),
+    )
+    .await?;
 
     // 5. KWin blur strength (shared by apps, the shell and Plasma popups)
     let strength = t.blur.then(|| t.blur_strength.unwrap_or(12).to_string());
     kwrite("kwinrc", "Effect-blur", "BlurStrength", strength.as_deref());
-    kwin(&conn, "/Effects", "org.kde.kwin.Effects", "reconfigureEffect", &("blur",)).await;
+    kwin(
+        &conn,
+        "/Effects",
+        "org.kde.kwin.Effects",
+        "reconfigureEffect",
+        &("blur",),
+    )
+    .await;
 
     // 6. kitty
     kitty_theme(t)?;
@@ -497,16 +595,24 @@ pub async fn run(args: &[String]) -> Result<()> {
     let themes = load(&file)?;
     match args {
         [cmd, id, rest @ ..] if cmd == "apply" => {
-            let t = themes.iter().find(|t| &t.id == id).with_context(|| format!("unknown theme {id}"))?;
+            let t = themes
+                .iter()
+                .find(|t| &t.id == id)
+                .with_context(|| format!("unknown theme {id}"))?;
             match rest {
                 [] => apply(t).await,
-                [flag, scheme] if flag == "--scheme" => apply(&with_scheme(t.clone(), Path::new(scheme))?).await,
+                [flag, scheme] if flag == "--scheme" => {
+                    apply(&with_scheme(t.clone(), Path::new(scheme))?).await
+                }
                 _ => bail!("usage: kshelld theme apply <id> [--scheme FILE]"),
             }
         }
         // Write the generated files into DIR without touching the desktop (parity tests, previews).
         [cmd, id, dir, rest @ ..] if cmd == "render" => {
-            let t = themes.iter().find(|t| &t.id == id).with_context(|| format!("unknown theme {id}"))?;
+            let t = themes
+                .iter()
+                .find(|t| &t.id == id)
+                .with_context(|| format!("unknown theme {id}"))?;
             let scheme = match rest {
                 [flag, f] if flag == "--scheme" => Some(with_scheme(t.clone(), Path::new(f))?),
                 _ => None,
@@ -514,10 +620,16 @@ pub async fn run(args: &[String]) -> Result<()> {
             let t = scheme.as_ref().unwrap_or(t);
             let dir = Path::new(dir);
             std::fs::create_dir_all(dir)?;
-            std::fs::write(dir.join(format!("{}.colors", scheme_name(t))), colour_scheme(t))?;
+            std::fs::write(
+                dir.join(format!("{}.colors", scheme_name(t))),
+                colour_scheme(t),
+            )?;
             std::fs::write(dir.join("kitty-theme.conf"), kitty_conf(t))?;
             let base = if t.dark { "KvFlat" } else { "KvFlatLight" };
-            std::fs::write(dir.join(format!("KShell{}.kvconfig", camel(&t.id))), kvantum_conf(t, base))?;
+            std::fs::write(
+                dir.join(format!("KShell{}.kvconfig", camel(&t.id))),
+                kvantum_conf(t, base),
+            )?;
             Ok(())
         }
         [cmd] if cmd == "current" => {
@@ -535,7 +647,9 @@ pub async fn run(args: &[String]) -> Result<()> {
             }
             Ok(())
         }
-        _ => bail!("usage: kshelld theme [--themes FILE] apply <id> [--scheme FILE] | render <id> <dir> [--scheme FILE] | current | list"),
+        _ => bail!(
+            "usage: kshelld theme [--themes FILE] apply <id> [--scheme FILE] | render <id> <dir> [--scheme FILE] | current | list"
+        ),
     }
 }
 
