@@ -44,7 +44,7 @@ jobs:
         with:
           version: "0.17.3"
           src: installer install.py
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
       - name: droid.toml is valid and matches kshelld's version
