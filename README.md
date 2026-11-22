@@ -1,10 +1,16 @@
-# dotfiles
+# droid
+
+[![CI](https://github.com/mmaachado/droid/actions/workflows/ci.yml/badge.svg)](https://github.com/mmaachado/droid/actions/workflows/ci.yml)
+
+**droid 1.0 "Cupcake"**: a Plasma-based Quickshell desktop.
 
 A desktop that keeps **KDE Plasma** underneath (KWin, session, settings, power,
 devices, wallpaper, desktop widgets) and replaces its panels with **KShell**, a
 Caelestia-style shell built with [Quickshell](https://quickshell.org). Plus the
-zsh setup that goes with it. See [docs/VISION.md](docs/VISION.md) for the idea
-and design rules.
+zsh setup that goes with it, and Android-style system icons from
+[droid-icons](https://github.com/mmaachado/droid-icons). Strictly speaking it's
+a desktop shell: KWin stays the window manager and Plasma the environment
+underneath.
 
 > Screenshots: _TODO_
 
@@ -13,8 +19,8 @@ and design rules.
 Arch Linux with Plasma 6 on Wayland.
 
 ```sh
-git clone https://github.com/mmaachado/dotfiles.git ~/.dotfiles
-cd ~/.dotfiles
+git clone https://github.com/mmaachado/droid.git ~/droid
+cd ~/droid
 ./install.sh all          # packages → links → wallpapers folder → zsh → KShell
 ```
 
@@ -25,13 +31,16 @@ cd ~/.dotfiles
 | -------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | `./install.py check`                                     | Report packages, links, login shell and KShell status (changes nothing)                      |
 | `./install.py packages [-g core -g kshell] [--optional]` | Install missing packages (pacman; AUR via paru/yay)                                          |
-| `./install.py link [--force]`                            | Symlink `home/*` into `$HOME`; existing files go to `~/.local/state/dotfiles/backup/<time>/` |
+| `./install.py link [--force]`                            | Symlink `home/*` into `$HOME`; existing files go to `~/.local/state/droid/backup/<time>/`    |
 | `./install.py unlink [--restore]`                        | Remove the symlinks, optionally restoring the latest backup                                  |
 | `./install.py shell`                                     | Make zsh the login shell                                                                     |
 | `./install.py kshell enable\|disable`                    | Swap between KShell and the Plasma panels                                                    |
 | `./install.py all [-y] [--optional]`                     | All of the above, in order                                                                   |
 
-Packages and linked paths live in [`dotfiles.toml`](dotfiles.toml).
+Packages, linked paths and the release (version and codename) live in
+[`droid.toml`](droid.toml). `./install.py version` prints them.
+
+Releases are named after Android's desserts, in order: 1.0 is Cupcake.
 
 The core idea is to keep KDE Plasma as the desktop environment and use Quickshell as a custom visual and interaction layer. Retaining KDE's mature infrastructure while gaining the flexibility to build a modern, cohesive interface inspired by Hyprland, Niri, and bespoke Wayland desktops.
 
