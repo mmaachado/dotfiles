@@ -49,6 +49,7 @@ cd ~/droid
 | `./install.py packages [-g core -g kshell] [--optional]` | Install missing packages (pacman; AUR via paru/yay)                                          |
 | `./install.py link [--force]`                            | Symlink `home/*` into `$HOME`; existing files go to `~/.local/state/droid/backup/<time>/`    |
 | `./install.py unlink [--restore]`                        | Remove the symlinks, optionally restoring the latest backup                                  |
+| `./install.py fonts [--no-apply]`                        | Fetch Google Sans Flex into `~/.local/share/fonts/droid` (pinned, sha256-checked) and make Google Sans the desktop font |
 | `./install.py shell`                                     | Make zsh the login shell                                                                     |
 | `./install.py kshell enable\|disable`                    | Swap between KShell and the Plasma panels                                                    |
 | `./install.py all [-y] [--optional]`                     | All of the above, in order                                                                   |

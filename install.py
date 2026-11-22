@@ -5,6 +5,7 @@ from typing import Annotated
 
 import typer
 
+from installer import fonts as F
 from installer import links as L
 from installer import packages as P
 from installer import system as S
@@ -62,6 +63,15 @@ def check() -> None:
         problems += bool(miss) and not g.optional
     console.print(t)
 
+    t = table("Fonts")
+    for font in m.fonts:
+        ok = F.installed(font)
+        t.add_row(mark(ok), font.family, "installed" if ok else "missing (./install.py fonts)")
+        problems += not ok
+    for alias in ("sans-serif", "monospace"):
+        t.add_row(" ", alias, S.font_match(alias) or "?")
+    console.print(t)
+
     t = table("Links")
     style = {L.Status.OK: OK, L.Status.MISSING: BAD, L.Status.CONFLICT: BAD, L.Status.FOREIGN: WARN}
     for link in L.plan(m.links):
@@ -97,6 +107,28 @@ def packages(group: groups = None, optional: with_optional = False, dry_run: dry
         console.print(f"{OK} Packages already installed ({', '.join(g.name for g in groups)}).")
         return
     if not P.install(repo, aur, dry_run):
+        raise typer.Exit(1)
+
+
+@app.command()
+def fonts(apply: Annotated[bool, typer.Option(help="Also make them the desktop's fonts (kshell fonts on).")] = True,
+          dry_run: dry_run = False) -> None:
+    """Fetch the fonts droid.toml downloads itself (Google Sans Flex) and use them."""
+    m = manifest()
+    for font in m.fonts:
+        if F.installed(font):
+            console.print(f"{OK} {font.family} already installed.")
+            continue
+        try:
+            F.install(font, dry_run)
+        except (OSError, ValueError) as e:
+            console.print(f"{BAD} {font.family}: {e}")
+            raise typer.Exit(1)
+        if not dry_run:
+            console.print(f"{OK} {font.family} installed in {F.DEST}.")
+    if not dry_run:
+        S.run(["fc-cache", "-f", str(F.DEST)], dry_run)
+    if apply and not S.kshell("fonts", dry_run, "on"):
         raise typer.Exit(1)
 
 
@@ -160,6 +192,10 @@ def install_all(yes: yes = False, optional: with_optional = False, dry_run: dry_
         console.print(f"  mkdir {m.wallpapers}")
         if not dry_run:
             m.wallpapers.mkdir(parents=True)
+
+    step("Fonts")
+    if confirm("Fetch Google Sans Flex and make Google Sans the desktop font?", yes or dry_run):
+        fonts(apply=True, dry_run=dry_run)
 
     step("Login shell")
     if S.login_shell().endswith("/zsh"):

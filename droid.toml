@@ -26,9 +26,19 @@ repo = [
 ]
 
 [packages.fonts]
-description = "Google Sans Flex (UI) and Google Sans Code (monospace), like Android"
+description = "Google Sans Code (monospace) and Noto fallbacks; Google Sans Flex comes from [[fonts]]"
 repo = ["ttf-googlesanscode-nerd", "noto-fonts", "noto-fonts-emoji"]
-aur = ["ttf-google-sans-flex-variable"]
+
+# Fonts the installer fetches itself (`./install.py fonts`) into
+# ~/.local/share/fonts/droid. Google Sans Flex isn't in the Arch repos, and
+# the AUR package broke when google/fonts renamed the file, so it comes
+# straight from google/fonts, pinned to a commit and checked by sha256.
+[[fonts]]
+family = "Google Sans Flex"
+files = [
+    { name = "GoogleSansFlex[ROND,opsz,slnt,wdth,wght].ttf", url = "https://raw.githubusercontent.com/google/fonts/fa826bb2a3e26df8c1bee99351fc0d039aeed7d2/ofl/googlesansflex/GoogleSansFlex%5BROND,opsz,slnt,wdth,wght%5D.ttf", sha256 = "a9ac770798857d5e8ac593ced42b22e40a7c08cec98319f92b0eccc2783a77ba" },
+    { name = "GoogleSansFlex-OFL.txt", url = "https://raw.githubusercontent.com/google/fonts/fa826bb2a3e26df8c1bee99351fc0d039aeed7d2/ofl/googlesansflex/OFL.txt", sha256 = "fc13d69f63e36d284b6e383d4d1463d8ad404f0aa065e57cf961252d51063137" },
+]
 
 [packages.kshell]
 description = "KShell: the Quickshell layer on top of KDE Plasma"
