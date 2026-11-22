@@ -35,7 +35,9 @@ pub fn parse_hex(s: &str) -> Result<Rgb> {
     if h.len() != 6 {
         bail!("expected #RRGGBB, got {s}");
     }
-    Ok(Rgb::from_u32(u32::from_str_radix(h, 16).with_context(|| format!("bad colour {s}"))?))
+    Ok(Rgb::from_u32(
+        u32::from_str_radix(h, 16).with_context(|| format!("bad colour {s}"))?,
+    ))
 }
 
 fn hex(c: Rgb) -> String {
@@ -76,8 +78,17 @@ pub fn build(seed: Rgb, variant: Variant, dark: bool, contrast: f64) -> Scheme {
     DynamicScheme::by_variant(seed, &variant, dark, Some(contrast)).into()
 }
 
-pub fn to_json(seed: Rgb, variant: &str, dark: bool, scheme: Scheme, wallpaper: Option<&Path>) -> Value {
-    let colors: Map<String, Value> = scheme.into_iter().map(|(k, c)| (camel(k), Value::String(hex(c)))).collect();
+pub fn to_json(
+    seed: Rgb,
+    variant: &str,
+    dark: bool,
+    scheme: Scheme,
+    wallpaper: Option<&Path>,
+) -> Value {
+    let colors: Map<String, Value> = scheme
+        .into_iter()
+        .map(|(k, c)| (camel(k), Value::String(hex(c))))
+        .collect();
     json!({
         "source": hex(seed),
         "variant": variant,
@@ -104,7 +115,11 @@ pub fn main(args: &[String]) -> Result<()> {
             "--variant" => variant = val()?.clone(),
             "--light" => dark = false,
             "--dark" => dark = true,
-            "--contrast" => contrast = val()?.parse().context("--contrast takes a number in -1..1")?,
+            "--contrast" => {
+                contrast = val()?
+                    .parse()
+                    .context("--contrast takes a number in -1..1")?
+            }
             "--out" => out = val()?.into(),
             "-" => out = PathBuf::from("-"),
             _ => bail!("unknown argument {a}"),
@@ -114,14 +129,25 @@ pub fn main(args: &[String]) -> Result<()> {
         .iter()
         .find(|(n, _)| *n == variant)
         .map(|(_, v)| *v)
-        .with_context(|| format!("unknown variant {variant}; one of {:?}", VARIANTS.map(|(n, _)| n)))?;
+        .with_context(|| {
+            format!(
+                "unknown variant {variant}; one of {:?}",
+                VARIANTS.map(|(n, _)| n)
+            )
+        })?;
     let seed = match (seed, &wallpaper) {
         (Some(s), _) => s,
         (None, Some(w)) => wallpaper_seed(w)?,
         (None, None) => bail!("need --wallpaper IMG or --seed #RRGGBB"),
     };
 
-    let json = to_json(seed, &variant, dark, build(seed, v, dark, contrast), wallpaper.as_deref());
+    let json = to_json(
+        seed,
+        &variant,
+        dark,
+        build(seed, v, dark, contrast),
+        wallpaper.as_deref(),
+    );
     let text = serde_json::to_string_pretty(&json)? + "\n";
     if out == Path::new("-") {
         print!("{text}");
@@ -141,14 +167,36 @@ mod tests {
     fn matches_material_color_utilities() {
         let seed = parse_hex("#4285f4").unwrap();
         let cases = [
-            (Variant::TonalSpot, true, ["#adc6ff", "#111318", "#c4c6d0", "#282a2f"]),
-            (Variant::TonalSpot, false, ["#445e91", "#f9f9ff", "#44474f", "#e8e7ee"]),
-            (Variant::Expressive, true, ["#9bd595", "#12131a", "#c6c5d6", "#292931"]),
-            (Variant::Expressive, false, ["#356a35", "#fbf8ff", "#454654", "#e9e7f2"]),
+            (
+                Variant::TonalSpot,
+                true,
+                ["#adc6ff", "#111318", "#c4c6d0", "#282a2f"],
+            ),
+            (
+                Variant::TonalSpot,
+                false,
+                ["#445e91", "#f9f9ff", "#44474f", "#e8e7ee"],
+            ),
+            (
+                Variant::Expressive,
+                true,
+                ["#9bd595", "#12131a", "#c6c5d6", "#292931"],
+            ),
+            (
+                Variant::Expressive,
+                false,
+                ["#356a35", "#fbf8ff", "#454654", "#e9e7f2"],
+            ),
         ];
         for (variant, dark, want) in cases {
             let s = build(seed, variant, dark, 0.0);
-            let got = [s.primary, s.surface, s.on_surface_variant, s.surface_container_high].map(hex);
+            let got = [
+                s.primary,
+                s.surface,
+                s.on_surface_variant,
+                s.surface_container_high,
+            ]
+            .map(hex);
             assert_eq!(got, want, "{variant:?} dark={dark}");
         }
     }
@@ -156,7 +204,13 @@ mod tests {
     #[test]
     fn json_roles_are_camel_case() {
         let seed = parse_hex("#6750a4").unwrap();
-        let j = to_json(seed, "tonal-spot", true, build(seed, Variant::TonalSpot, true, 0.0), None);
+        let j = to_json(
+            seed,
+            "tonal-spot",
+            true,
+            build(seed, Variant::TonalSpot, true, 0.0),
+            None,
+        );
         assert!(j["colors"]["onSurfaceVariant"].is_string());
         assert!(j["colors"]["surfaceContainerHighest"].is_string());
         assert_eq!(j["source"], "#6750a4");

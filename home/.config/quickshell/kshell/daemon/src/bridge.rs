@@ -22,8 +22,8 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::signal::unix::{SignalKind, signal};
 use tokio::sync::mpsc;
 use tokio::time::{Instant, sleep_until};
-use zbus::fdo::{DBusProxy, RequestNameFlags};
 use zbus::Variant;
+use zbus::fdo::{DBusProxy, RequestNameFlags};
 use zbus::{Connection, interface};
 
 const NAME: &str = "org.kshell.Bridge";
@@ -68,7 +68,13 @@ struct Kwin {
 }
 
 impl Kwin {
-    async fn call<B>(&self, path: &str, iface: &str, method: &str, body: &B) -> zbus::Result<zbus::Message>
+    async fn call<B>(
+        &self,
+        path: &str,
+        iface: &str,
+        method: &str,
+        body: &B,
+    ) -> zbus::Result<zbus::Message>
     where
         B: serde::Serialize + zbus::zvariant::DynamicType,
     {
@@ -78,20 +84,35 @@ impl Kwin {
     }
 
     async fn unload(&self, plugin: &str) -> zbus::Result<()> {
-        self.call("/Scripting", "org.kde.kwin.Scripting", "unloadScript", &(plugin,))
-            .await
-            .map(drop)
+        self.call(
+            "/Scripting",
+            "org.kde.kwin.Scripting",
+            "unloadScript",
+            &(plugin,),
+        )
+        .await
+        .map(drop)
     }
 
     async fn run_script(&self, path: &Path, plugin: &str) -> Result<()> {
         let _ = self.unload(plugin).await;
         let file = path.to_str().context("non-UTF-8 script path")?;
         let reply = self
-            .call("/Scripting", "org.kde.kwin.Scripting", "loadScript", &(file, plugin))
+            .call(
+                "/Scripting",
+                "org.kde.kwin.Scripting",
+                "loadScript",
+                &(file, plugin),
+            )
             .await?;
         let id: i32 = reply.body().deserialize()?;
-        self.call(&format!("/Scripting/Script{id}"), "org.kde.kwin.Script", "run", &())
-            .await?;
+        self.call(
+            &format!("/Scripting/Script{id}"),
+            "org.kde.kwin.Script",
+            "run",
+            &(),
+        )
+        .await?;
         Ok(())
     }
 
@@ -101,7 +122,11 @@ impl Kwin {
                 "/VirtualDesktopManager",
                 "org.freedesktop.DBus.Properties",
                 "Set",
-                &("org.kde.KWin.VirtualDesktopManager", "current", Variant::from(target)),
+                &(
+                    "org.kde.KWin.VirtualDesktopManager",
+                    "current",
+                    Variant::from(target),
+                ),
             )
             .await?;
             return Ok(());
@@ -162,12 +187,23 @@ pub async fn run(args: &[String]) -> Result<()> {
     let (tx, mut rx) = mpsc::unbounded_channel();
     let conn = Connection::session().await?;
     let hide_osd = Arc::new(AtomicBool::new(hide));
-    conn.object_server().at(PATH, Bridge { tx, hide_osd: hide_osd.clone() }).await?;
+    conn.object_server()
+        .at(
+            PATH,
+            Bridge {
+                tx,
+                hide_osd: hide_osd.clone(),
+            },
+        )
+        .await?;
 
     let dbus = DBusProxy::new(&conn).await?;
     let mut name_lost = dbus.receive_name_lost().await?;
-    conn.request_name_with_flags(NAME, RequestNameFlags::REPLACE_EXISTING | RequestNameFlags::ALLOW_REPLACEMENT)
-        .await?;
+    conn.request_name_with_flags(
+        NAME,
+        RequestNameFlags::REPLACE_EXISTING | RequestNameFlags::ALLOW_REPLACEMENT,
+    )
+    .await?;
 
     let pid = std::process::id();
     let kwin = Kwin {
@@ -181,8 +217,11 @@ pub async fn run(args: &[String]) -> Result<()> {
     std::fs::write(runtime.join("plugin"), &kwin.plugin)?;
 
     let mut stdin = BufReader::new(tokio::io::stdin()).lines();
-    let (mut term, mut int, mut hup) =
-        (signal(SignalKind::terminate())?, signal(SignalKind::interrupt())?, signal(SignalKind::hangup())?);
+    let (mut term, mut int, mut hup) = (
+        signal(SignalKind::terminate())?,
+        signal(SignalKind::interrupt())?,
+        signal(SignalKind::hangup())?,
+    );
     let mut pending: Option<String> = None;
     let mut deadline = Instant::now();
 

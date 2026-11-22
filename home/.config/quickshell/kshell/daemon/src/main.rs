@@ -46,5 +46,8 @@ fn run() -> Result<()> {
 }
 
 fn block_on<F: Future<Output = Result<()>>>(f: F) -> Result<()> {
-    tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(f)
+    tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()?
+        .block_on(f)
 }

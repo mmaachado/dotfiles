@@ -24,7 +24,9 @@ use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use wayland_client::globals::{GlobalListContents, registry_queue_init};
 use wayland_client::protocol::{wl_callback, wl_registry, wl_seat};
-use wayland_client::{Connection, Dispatch, Proxy, QueueHandle, backend::ObjectId, event_created_child};
+use wayland_client::{
+    Connection, Dispatch, Proxy, QueueHandle, backend::ObjectId, event_created_child,
+};
 use wayland_protocols::ext::data_control::v1::client::{
     ext_data_control_device_v1::{self, ExtDataControlDeviceV1},
     ext_data_control_manager_v1::ExtDataControlManagerV1,
@@ -34,7 +36,13 @@ use wayland_protocols::ext::data_control::v1::client::{
 
 use crate::paths::{state_dir, write_atomic};
 
-const TEXT_MIMES: [&str; 5] = ["text/plain;charset=utf-8", "UTF8_STRING", "text/plain", "TEXT", "STRING"];
+const TEXT_MIMES: [&str; 5] = [
+    "text/plain;charset=utf-8",
+    "UTF8_STRING",
+    "text/plain",
+    "TEXT",
+    "STRING",
+];
 const SECRET_HINT: &str = "x-kde-passwordManagerHint";
 const MAX_ENTRIES: usize = 200;
 const MAX_BYTES: usize = 256 * 1024;
@@ -72,7 +80,10 @@ struct State {
 }
 
 fn now() -> u64 {
-    SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
 }
 
 fn store_path() -> std::path::PathBuf {
@@ -83,7 +94,9 @@ impl State {
     fn emit(&self) -> bool {
         let json = serde_json::to_string(&self.history).unwrap_or_else(|_| "[]".into());
         let mut out = std::io::stdout().lock();
-        writeln!(out, "history {json}").and_then(|()| out.flush()).is_ok()
+        writeln!(out, "history {json}")
+            .and_then(|()| out.flush())
+            .is_ok()
     }
 
     fn save(&self) {
@@ -123,7 +136,15 @@ impl State {
         };
         self.next_id += 1;
         let at = if stale { 1.min(self.history.len()) } else { 0 };
-        self.history.insert(at, Entry { id: self.next_id, text, pinned, time: now() });
+        self.history.insert(
+            at,
+            Entry {
+                id: self.next_id,
+                text,
+                pinned,
+                time: now(),
+            },
+        );
         self.changed()
     }
 
@@ -179,7 +200,9 @@ impl State {
             offer.destroy();
             return;
         };
-        let Ok((mut reader, writer)) = std::io::pipe() else { return };
+        let Ok((mut reader, writer)) = std::io::pipe() else {
+            return;
+        };
         offer.receive((*mime).into(), writer.as_fd());
         drop(writer);
         let _ = conn.flush();
@@ -188,7 +211,11 @@ impl State {
         let seq = self.seq;
         std::thread::spawn(move || {
             let mut buf = Vec::new();
-            if reader.by_ref().take(MAX_BYTES as u64 + 1).read_to_end(&mut buf).is_ok()
+            if reader
+                .by_ref()
+                .take(MAX_BYTES as u64 + 1)
+                .read_to_end(&mut buf)
+                .is_ok()
                 && let Ok(text) = String::from_utf8(buf)
             {
                 let _ = tx.send(Msg::Read(seq, text)); // forwarded + loop woken in run()
@@ -198,23 +225,62 @@ impl State {
 }
 
 impl Dispatch<wl_registry::WlRegistry, GlobalListContents> for State {
-    fn event(_: &mut Self, _: &wl_registry::WlRegistry, _: wl_registry::Event, _: &GlobalListContents, _: &Connection, _: &QueueHandle<Self>) {}
+    fn event(
+        _: &mut Self,
+        _: &wl_registry::WlRegistry,
+        _: wl_registry::Event,
+        _: &GlobalListContents,
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
+    }
 }
 
 impl Dispatch<wl_seat::WlSeat, ()> for State {
-    fn event(_: &mut Self, _: &wl_seat::WlSeat, _: wl_seat::Event, _: &(), _: &Connection, _: &QueueHandle<Self>) {}
+    fn event(
+        _: &mut Self,
+        _: &wl_seat::WlSeat,
+        _: wl_seat::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
+    }
 }
 
 impl Dispatch<wl_callback::WlCallback, ()> for State {
-    fn event(_: &mut Self, _: &wl_callback::WlCallback, _: wl_callback::Event, _: &(), _: &Connection, _: &QueueHandle<Self>) {}
+    fn event(
+        _: &mut Self,
+        _: &wl_callback::WlCallback,
+        _: wl_callback::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
+    }
 }
 
 impl Dispatch<ExtDataControlManagerV1, ()> for State {
-    fn event(_: &mut Self, _: &ExtDataControlManagerV1, _: <ExtDataControlManagerV1 as Proxy>::Event, _: &(), _: &Connection, _: &QueueHandle<Self>) {}
+    fn event(
+        _: &mut Self,
+        _: &ExtDataControlManagerV1,
+        _: <ExtDataControlManagerV1 as Proxy>::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
+    }
 }
 
 impl Dispatch<ExtDataControlDeviceV1, ()> for State {
-    fn event(state: &mut Self, _: &ExtDataControlDeviceV1, event: ext_data_control_device_v1::Event, _: &(), conn: &Connection, _: &QueueHandle<Self>) {
+    fn event(
+        state: &mut Self,
+        _: &ExtDataControlDeviceV1,
+        event: ext_data_control_device_v1::Event,
+        _: &(),
+        conn: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
         match event {
             ext_data_control_device_v1::Event::DataOffer { id } => {
                 state.offers.insert(id.id(), Vec::new());
@@ -226,7 +292,10 @@ impl Dispatch<ExtDataControlDeviceV1, ()> for State {
             // Emptied (the app that copied quit): put the newest entry back.
             ext_data_control_device_v1::Event::Selection { id: None } => {
                 state.seq += 1;
-                if let (Some(text), Some(qh)) = (state.history.first().map(|e| e.text.clone()), state.qh.clone()) {
+                if let (Some(text), Some(qh)) = (
+                    state.history.first().map(|e| e.text.clone()),
+                    state.qh.clone(),
+                ) {
                     state.set_selection(text, &qh);
                 }
             }
@@ -245,7 +314,14 @@ impl Dispatch<ExtDataControlDeviceV1, ()> for State {
 }
 
 impl Dispatch<ExtDataControlOfferV1, ()> for State {
-    fn event(state: &mut Self, offer: &ExtDataControlOfferV1, event: ext_data_control_offer_v1::Event, _: &(), _: &Connection, _: &QueueHandle<Self>) {
+    fn event(
+        state: &mut Self,
+        offer: &ExtDataControlOfferV1,
+        event: ext_data_control_offer_v1::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
         if let ext_data_control_offer_v1::Event::Offer { mime_type } = event {
             state.offers.entry(offer.id()).or_default().push(mime_type);
         }
@@ -253,7 +329,14 @@ impl Dispatch<ExtDataControlOfferV1, ()> for State {
 }
 
 impl Dispatch<ExtDataControlSourceV1, ()> for State {
-    fn event(state: &mut Self, source: &ExtDataControlSourceV1, event: ext_data_control_source_v1::Event, _: &(), _: &Connection, _: &QueueHandle<Self>) {
+    fn event(
+        state: &mut Self,
+        source: &ExtDataControlSourceV1,
+        event: ext_data_control_source_v1::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
         match event {
             ext_data_control_source_v1::Event::Send { fd, .. } => {
                 let text = state.serving.clone();
