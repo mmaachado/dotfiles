@@ -44,8 +44,10 @@ Scope {
         asynchronous: true
         cache: false
         fillMode: Image.PreserveAspectCrop
-        // Snapshots from grabToImage are already screen-sized.
-        sourceSize: String(source).startsWith("file:") ? Qt.size(root.screen.width, root.screen.height) : undefined
+        // Snapshots from grabToImage are already screen-sized. Centered and
+        // tiled wallpapers are drawn at their own size, so load them whole.
+        sourceSize: String(source).startsWith("file:") && !["center", "tile"].includes(Wallpapers.fillOn(root.screen.name))
+            ? Qt.size(root.screen.width, root.screen.height) : undefined
         onStatusChanged: {
             root.trySnap();
             root.tryStart();
@@ -210,6 +212,9 @@ Scope {
                 property vector2d toSize: Qt.vector2d(root.toSlot.implicitWidth, root.toSlot.implicitHeight)
                 property var fromTex: root.fromSlot
                 property var toTex: root.toSlot
+                // Fill like Plasma does on this screen (Settings → Wallpaper).
+                property real fillMode: Wallpapers.fillCode(root.screen.name)
+                property real blurFill: Settings.options.wallpaperBlur ? 1 : 0
 
                 anchors.fill: parent
                 fragmentShader: Qt.resolvedUrl(`../shaders/${root.effect}.frag.qsb`)

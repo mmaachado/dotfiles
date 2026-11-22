@@ -41,6 +41,11 @@ Singleton {
             property bool wallpaperTransition: true
             // same (every display) | per-display (the one the picker opened on).
             property string wallpaperMode: "same"
+            // How each display's wallpaper fills it, by screen name: crop |
+            // fit | stretch | center | tile. Missing = crop (Plasma's default).
+            property var wallpaperFill: ({})
+            // Fit and center: blur the wallpaper into the empty space (else black).
+            property bool wallpaperBlur: true
             // Length of the wallpaper transition, in ms (scaled by KDE's animation speed).
             property int transitionDuration: 2600
             // liquid | fade | wipe | circle | pixelate | dissolve | random

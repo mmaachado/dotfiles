@@ -46,6 +46,59 @@ Singleton {
     property string preview: ""
     property string previewScreen: ""
 
+    // ── Fill mode ────────────────────────────────────────────────────
+
+    // Plasma's org.kde.image FillMode is a Qt Image.FillMode.
+    readonly property var fillModes: ({ stretch: 0, fit: 1, crop: 2, tile: 3, center: 6 })
+
+    function fillOn(screen: string): string {
+        const f = (Settings.options.wallpaperFill ?? {})[screen];
+        return f in root.fillModes ? f : "crop";
+    }
+    function fillCode(screen: string): int {
+        return root.fillModes[root.fillOn(screen)];
+    }
+    function setFill(screen: string, fill: string): void {
+        const m = Object.assign({}, Settings.options.wallpaperFill ?? {});
+        m[screen] = fill;
+        Settings.options.wallpaperFill = m;
+    }
+
+    // Script lines that set a desktop's fill to match ours.
+    function fillScript(screen: string): string {
+        return `
+            d.writeConfig("FillMode", ${root.fillCode(screen)});
+            d.writeConfig("Blur", ${Settings.options.wallpaperBlur});
+            d.writeConfig("Color", "0,0,0");`;
+    }
+
+    // Run `body` (with `d` bound) on the desktop shown on `screen`.
+    function onDesktop(screen: string, body: string): void {
+        const s = Quickshell.screens.find(q => q.name === screen);
+        if (!s)
+            return;
+        root.plasma(`
+            for (const d of desktops()) {
+                const g = d.screen >= 0 ? screenGeometry(d.screen) : null;
+                if (!g || g.x !== ${s.x} || g.y !== ${s.y})
+                    continue;
+                d.wallpaperPlugin = "org.kde.image";
+                d.currentConfigGroup = ["Wallpaper", "org.kde.image", "General"];
+                ${body}
+            }`);
+    }
+
+    // Push fill changes made in the settings to Plasma.
+    Connections {
+        target: Settings.options
+        function onWallpaperFillChanged(): void { root.pushFill(); }
+        function onWallpaperBlurChanged(): void { root.pushFill(); }
+    }
+    function pushFill(): void {
+        for (const s of Quickshell.screens)
+            root.onDesktop(s.name, root.fillScript(s.name));
+    }
+
     function currentOn(screen: string): string {
         return root.currentFor[screen] ?? root.current;
     }
@@ -109,18 +162,8 @@ Singleton {
             return;
         root.pendingFor = root.withKey(root.pendingFor, screen, undefined);
         root.appliedFor = root.withKey(root.appliedFor, screen, path);
-        const s = Quickshell.screens.find(q => q.name === screen);
-        if (s)
-            root.plasma(`
-                const url = ${JSON.stringify(root.url(path))};
-                for (const d of desktops()) {
-                    const g = d.screen >= 0 ? screenGeometry(d.screen) : null;
-                    if (!g || g.x !== ${s.x} || g.y !== ${s.y})
-                        continue;
-                    d.wallpaperPlugin = "org.kde.image";
-                    d.currentConfigGroup = ["Wallpaper", "org.kde.image", "General"];
-                    d.writeConfig("Image", url);
-                }`);
+        root.onDesktop(screen, `${root.fillScript(screen)}
+                d.writeConfig("Image", ${JSON.stringify(root.url(path))});`);
         if (Object.keys(root.pendingFor).length === 0)
             fallback.stop();
     }
