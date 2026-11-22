@@ -39,6 +39,8 @@ Singleton {
             // Empty = ~/Pictures/Wallpapers.
             property string wallpaperDir: ""
             property bool wallpaperTransition: true
+            // same (every display) | per-display (the one the picker opened on).
+            property string wallpaperMode: "same"
             // Length of the wallpaper transition, in ms (scaled by KDE's animation speed).
             property int transitionDuration: 2600
             // liquid | fade | wipe | circle | pixelate | dissolve | random

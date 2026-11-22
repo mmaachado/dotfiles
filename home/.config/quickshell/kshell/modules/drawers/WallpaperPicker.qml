@@ -39,11 +39,11 @@ Item {
     Timer {
         id: previewDelay
         interval: 350
-        onTriggered: Wallpapers.preview = root.selected
+        onTriggered: Wallpapers.setPreview(root.selected, Visibilities.screen)
     }
 
     function centreOnCurrent(): void {
-        const i = shown.indexOf(Wallpapers.current);
+        const i = shown.indexOf(Wallpapers.currentOn(Visibilities.screen));
         view.positionViewAtIndex(Math.max(0, i), PathView.Center);
         view.currentIndex = Math.max(0, i);
     }
@@ -51,8 +51,38 @@ Item {
     function apply(path: string): void {
         if (!path)
             return;
-        Wallpapers.apply(path);
+        Wallpapers.apply(path, Visibilities.screen);
         Visibilities.closeAll();
+    }
+
+    // "This display | All displays" choice, with more than one screen.
+    component ModeChip: Rectangle {
+        id: chip
+        property string mode
+        property string label
+        readonly property bool on: Settings.options.wallpaperMode === mode
+
+        width: chipLabel.implicitWidth + 28
+        height: 30
+        radius: height / 2
+        color: on ? Appearance.colors.primary : Appearance.colors.surfaceHigh
+
+        StyledText {
+            id: chipLabel
+            anchors.centerIn: parent
+            text: chip.label
+            font.pointSize: Appearance.font.small
+            color: chip.on ? Appearance.colors.onPrimary : Appearance.colors.text
+        }
+        StateLayer {
+            tint: chip.on ? Appearance.colors.onPrimary : Appearance.colors.text
+            onClicked: {
+                Settings.options.wallpaperMode = chip.mode;
+                // Re-preview where the highlighted wallpaper now goes.
+                if (root.selected)
+                    Wallpapers.setPreview(root.selected, Visibilities.screen);
+            }
+        }
     }
 
     Connections {
@@ -78,7 +108,7 @@ Item {
                 delegate: CarouselCard {
                     id: card
                     required property string modelData
-                    checked: modelData === Wallpapers.current
+                    checked: modelData === Wallpapers.currentOn(Visibilities.screen)
                     onActivated: root.apply(modelData)
 
                     Image {
@@ -138,6 +168,21 @@ Item {
             text: root.selected ? Wallpapers.name(root.selected) : " "
             font.pointSize: Appearance.font.large
             font.bold: true
+        }
+
+        Row {
+            anchors.horizontalCenter: parent.horizontalCenter
+            visible: Quickshell.screens.length > 1
+            spacing: 6
+
+            ModeChip {
+                mode: "per-display"
+                label: "This display"
+            }
+            ModeChip {
+                mode: "same"
+                label: "All displays"
+            }
         }
 
         Rectangle {

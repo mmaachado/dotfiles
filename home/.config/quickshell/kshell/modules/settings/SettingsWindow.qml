@@ -664,6 +664,24 @@ FloatingWindow {
                 }
             }
 
+            Block {
+                visible: Quickshell.screens.length > 1
+                label: "Displays"
+                description: Settings.options.wallpaperMode === "same"
+                    ? "A wallpaper you pick goes on every display."
+                    : "A wallpaper you pick goes on the display the picker is open on."
+
+                Repeater {
+                    model: [["same", "Same on all displays"], ["per-display", "One per display"]]
+                    PillButton {
+                        required property var modelData
+                        label: modelData[1]
+                        primary: Settings.options.wallpaperMode === modelData[0]
+                        onClicked: Settings.options.wallpaperMode = modelData[0]
+                    }
+                }
+            }
+
             SettingRow {
                 icon: "preferences-desktop-wallpaper"
                 label: "Transition"
