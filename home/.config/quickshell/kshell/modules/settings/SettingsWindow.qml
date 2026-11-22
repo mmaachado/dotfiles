@@ -40,6 +40,50 @@ FloatingWindow {
     // SettingRow, Block, PillButton, Heading and Hint have their own files
     // here, so other files can use them too.
 
+    // Switch the droid-icons style. KShell only resolves icons when it
+    // loads, so `kshell icons on` restarts it and reopens this page.
+    function setIcons(style: string, filled: bool): void {
+        Settings.options.iconStyle = style;
+        Settings.options.iconFilled = filled;
+        Quickshell.execDetached(["env", "KSHELL_REOPEN_SETTINGS=appearance",
+            Quickshell.env("HOME") + "/.local/bin/kshell", "icons", "on", style, filled ? "filled" : "outline"]);
+    }
+
+    // A style choice showing that style's Wi-Fi glyph from the installed theme.
+    component IconStyleChip: Rectangle {
+        id: chip
+        property string style
+        property string label
+        readonly property bool on: Settings.options.iconStyle === style
+        readonly property string theme: "droid-icons-" + style + (Settings.options.iconFilled ? "-filled" : "")
+
+        implicitWidth: chipRow.implicitWidth + 28
+        implicitHeight: 38
+        radius: height / 2
+        color: on ? Appearance.colors.primary : Appearance.colors.surfaceHigh
+
+        Row {
+            id: chipRow
+            anchors.centerIn: parent
+            spacing: 8
+            Icon {
+                anchors.verticalCenter: parent.verticalCenter
+                name: Quickshell.env("HOME") + "/.local/share/icons/" + chip.theme + "/symbolic/status/network-wireless-signal-good-symbolic.svg"
+                size: 18
+                color: chip.on ? Appearance.colors.onPrimary : Appearance.colors.text
+            }
+            StyledText {
+                anchors.verticalCenter: parent.verticalCenter
+                text: chip.label
+                color: chip.on ? Appearance.colors.onPrimary : Appearance.colors.text
+            }
+        }
+        StateLayer {
+            tint: chip.on ? Appearance.colors.onPrimary : Appearance.colors.text
+            onClicked: if (!chip.on) root.setIcons(chip.style, Settings.options.iconFilled)
+        }
+    }
+
     component Swatch: Rectangle {
         id: swatch
         property color swatchColor
@@ -198,6 +242,30 @@ FloatingWindow {
                 PillButton {
                     label: "Choose theme…"
                     onClicked: Visibilities.show("themes", "")
+                }
+            }
+
+            Block {
+                label: "System icons"
+                description: "Material Symbols, like Android, for Wi-Fi, battery, volume and other system icons. App icons stay Tela-circle. Changing them restarts the shell."
+
+                Repeater {
+                    model: [["rounded", "Rounded"], ["outlined", "Outlined"], ["sharp", "Sharp"]]
+                    IconStyleChip {
+                        required property var modelData
+                        style: modelData[0]
+                        label: modelData[1]
+                    }
+                }
+            }
+
+            SettingRow {
+                icon: "starred-symbolic"
+                label: "Filled icons"
+                description: "Solid glyphs, as Android's status bar draws them. Off: outlines."
+                StyledSwitch {
+                    checked: Settings.options.iconFilled
+                    onToggled: root.setIcons(Settings.options.iconStyle, !checked)
                 }
             }
 

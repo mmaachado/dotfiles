@@ -5,7 +5,9 @@
 #   kshell restart   restart KShell
 #   kshell stop      stop KShell (and any crash-restarted copy)
 #   kshell build     build and install the native backend (kshelld) into ~/.local/bin
-#   kshell icons on  install droid-icons (Material system icons over Tela-circle) and use it
+#   kshell icons on [rounded|outlined|sharp] [filled|outline]
+#                    install droid-icons (Material system icons over Tela-circle)
+#                    and use that style (default: rounded filled)
 #   kshell icons off back to plain Tela-circle
 #   kshell fonts on  Google Sans Flex / Google Sans Code for the whole desktop
 #   kshell fonts off back to Plasma's default fonts
@@ -128,14 +130,19 @@ PY
 icons() {
     case "${1:-on}" in
         on)
-            if [[ ! -d $DROID_ICONS ]]; then
-                git clone --quiet "$DROID_ICONS_REPO" "$DROID_ICONS"
+            local style=${2:-rounded} fill=${3:-filled}
+            case $style in rounded|outlined|sharp) ;; *) echo "unknown style: $style" >&2; exit 1 ;; esac
+            case $fill in filled|outline) ;; *) echo "use filled or outline, not $fill" >&2; exit 1 ;; esac
+            local theme="droid-icons-$style"
+            [[ $fill == filled ]] && theme+="-filled"
+            if [[ ! -f "${XDG_DATA_HOME:-$HOME/.local/share}/icons/$theme/index.theme" ]]; then
+                [[ -d $DROID_ICONS ]] || git clone --quiet "$DROID_ICONS_REPO" "$DROID_ICONS"
+                "$DROID_ICONS/install.sh" >/dev/null
             fi
-            "$DROID_ICONS/install.sh"
-            set_icon_theme droid-icons
+            set_icon_theme "$theme"
             ;;
         off) set_icon_theme Tela-circle ;;
-        *) echo "usage: kshell icons on|off" >&2; exit 1 ;;
+        *) echo "usage: kshell icons on [rounded|outlined|sharp] [filled|outline] | off" >&2; exit 1 ;;
     esac
 }
 
@@ -145,6 +152,13 @@ set_icon_theme() {
     dbus-send --session --type=signal /KIconLoader org.kde.KIconLoader.iconChanged int32:0 || true
     if pgrep -u "$USER" -f "$PATTERN" >/dev/null; then
         stop; sleep 0.5; start
+        # Asked from the settings window: open it again where it was.
+        if [[ -n ${KSHELL_REOPEN_SETTINGS:-} ]]; then
+            for _ in $(seq 20); do
+                qs -c "$CONFIG" ipc call settings page "$KSHELL_REOPEN_SETTINGS" >/dev/null 2>&1 && break
+                sleep 0.25
+            done
+        fi
     fi
     echo "Icon theme: $1"
 }
@@ -200,5 +214,5 @@ case "${1:-}" in
     icons) shift; icons "$@" ;;
     fonts) shift; fonts "$@" ;;
     ipc) shift; qs -c "$CONFIG" ipc call "$@" ;;
-    *) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
+    *) sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
 esac

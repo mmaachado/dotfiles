@@ -76,6 +76,10 @@ Singleton {
             property string notchDisplays: "all"
             property string popupDisplays: "primary"
 
+            // System icons (droid-icons): rounded | outlined | sharp, filled or not.
+            property string iconStyle: "rounded"
+            property bool iconFilled: true
+
             // Draw KShell's own OSD (volume, brightness, ...) instead of Plasma's.
             property bool osd: true
 
