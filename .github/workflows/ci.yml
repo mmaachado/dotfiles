@@ -24,7 +24,7 @@ jobs:
       run:
         working-directory: ${{ env.DAEMON }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
@@ -39,7 +39,7 @@ jobs:
     name: Installer (ruff, manifest)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/ruff-action@v3
         with:
           version: "0.17.3"
@@ -75,7 +75,7 @@ jobs:
     name: Scripts (shellcheck, zsh -n)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: shellcheck install.sh home/.local/bin/kshell
       - run: sudo apt-get install -y --no-install-recommends zsh
       - name: zsh syntax
@@ -90,7 +90,7 @@ jobs:
     container: archlinux:latest
     steps:
       - run: pacman -Syu --noconfirm --needed qt6-shadertools git
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Compile every shader with qsb
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
