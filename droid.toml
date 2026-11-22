@@ -1,3 +1,13 @@
+# droid: a Plasma-based Quickshell desktop. This file holds the release
+# details and what the installer (install.py) sets up.
+
+[release]
+name = "droid"
+version = "1.0.0"
+# Android dessert names, in Android's order: Cupcake, Donut, Eclair, ...
+codename = "Cupcake"
+description = "Plasma-based Quickshell desktop"
+
 [packages.core]
 description = "zsh shell, prompt and CLI tools"
 repo = [

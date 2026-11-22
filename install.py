@@ -17,7 +17,7 @@ kshell_app = typer.Typer(help="Switch between KShell and the Plasma panels.", no
 app.add_typer(kshell_app, name="kshell")
 
 dry_run = Annotated[bool, typer.Option("--dry-run", "-n", help="Show what would happen, change nothing.")]
-groups = Annotated[list[str] | None, typer.Option("--group", "-g", help="Package group(s) from dotfiles.toml.")]
+groups = Annotated[list[str] | None, typer.Option("--group", "-g", help="Package group(s) from droid.toml.")]
 with_optional = Annotated[bool, typer.Option("--optional", help="Include optional package groups.")]
 yes = Annotated[bool, typer.Option("--yes", "-y", help="Don't ask for confirmation.")]
 
@@ -31,9 +31,16 @@ def manifest():
 
 
 @app.command()
+def version() -> None:
+    """Print the droid version and codename."""
+    console.print(str(manifest().release))
+
+
+@app.command()
 def check() -> None:
     m = manifest()
     problems = 0
+    console.print(f"[bold]{m.release}[/bold]")
 
     t = table("System")
     desktop, kind = S.session()
