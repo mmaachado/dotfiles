@@ -7,6 +7,8 @@
 #   kshell build     build and install the native backend (kshelld) into ~/.local/bin
 #   kshell icons on  install droid-icons (Material system icons over Tela-circle) and use it
 #   kshell icons off back to plain Tela-circle
+#   kshell fonts on  Google Sans Flex / Google Sans Code for the whole desktop
+#   kshell fonts off back to Plasma's default fonts
 #   kshell ipc ...   e.g. `kshell ipc launcher toggle`
 set -euo pipefail
 
@@ -147,6 +149,48 @@ set_icon_theme() {
     echo "Icon theme: $1"
 }
 
+# Qt font strings: family,size,-1,5,weight,... (Qt 6 format).
+UI_FONT="Google Sans Flex"
+MONO_FONT="GoogleSansCode Nerd Font"
+qfont() { echo "$1,$2,-1,5,${3:-400},0,0,0,0,0,0,0,0,0,0,1"; }
+
+fonts() {
+    local general=(font menuFont toolBarFont smallestReadableFont fixed)
+    case "${1:-on}" in
+        on)
+            for f in "$UI_FONT" "$MONO_FONT"; do
+                fc-list : family | grep -qxF "$f" \
+                    || echo "warning: $f isn't installed (./install.py packages -g fonts)" >&2
+            done
+            kwriteconfig6 --file kdeglobals --group General --key font "$(qfont "$UI_FONT" 10)"
+            kwriteconfig6 --file kdeglobals --group General --key menuFont "$(qfont "$UI_FONT" 10)"
+            kwriteconfig6 --file kdeglobals --group General --key toolBarFont "$(qfont "$UI_FONT" 10)"
+            kwriteconfig6 --file kdeglobals --group General --key smallestReadableFont "$(qfont "$UI_FONT" 8)"
+            kwriteconfig6 --file kdeglobals --group General --key fixed "$(qfont "$MONO_FONT" 10)"
+            kwriteconfig6 --file kdeglobals --group WM --key activeFont "$(qfont "$UI_FONT" 10 500)"
+            if command -v gsettings >/dev/null; then
+                gsettings set org.gnome.desktop.interface font-name "$UI_FONT 10" 2>/dev/null || true
+                gsettings set org.gnome.desktop.interface monospace-font-name "$MONO_FONT 10" 2>/dev/null || true
+            fi
+            ;;
+        off)
+            for key in "${general[@]}"; do
+                kwriteconfig6 --file kdeglobals --group General --key "$key" --delete
+            done
+            kwriteconfig6 --file kdeglobals --group WM --key activeFont --delete
+            if command -v gsettings >/dev/null; then
+                gsettings reset org.gnome.desktop.interface font-name 2>/dev/null || true
+                gsettings reset org.gnome.desktop.interface monospace-font-name 2>/dev/null || true
+            fi
+            ;;
+        *) echo "usage: kshell fonts on|off" >&2; exit 1 ;;
+    esac
+    # Tell running apps (KGlobalSettings: 2 = fonts changed) and KWin (titles).
+    dbus-send --session --type=signal /KGlobalSettings org.kde.KGlobalSettings.notifyChange int32:2 int32:0 || true
+    qdbus6 org.kde.KWin /KWin reconfigure >/dev/null 2>&1 || true
+    echo "Fonts: ${1:-on}"
+}
+
 case "${1:-}" in
     enable) enable ;;
     disable) disable ;;
@@ -154,6 +198,7 @@ case "${1:-}" in
     stop) stop ;;
     build) build ;;
     icons) shift; icons "$@" ;;
+    fonts) shift; fonts "$@" ;;
     ipc) shift; qs -c "$CONFIG" ipc call "$@" ;;
-    *) sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
+    *) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
 esac
