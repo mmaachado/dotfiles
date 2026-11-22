@@ -72,6 +72,8 @@ Singleton {
 
             // Which screen edge the bar sits on: left | top | right | bottom.
             property string barPosition: "left"
+            // Show KWin's virtual desktops in the bar.
+            property bool barDesktops: true
 
             // Multiple displays: where the bar and the notch show (all |
             // primary), and where notification popups appear (primary | active).

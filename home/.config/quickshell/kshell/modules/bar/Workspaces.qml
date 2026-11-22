@@ -13,6 +13,7 @@ Pill {
 
     spacing: 6
     padding: 10
+    visible: Settings.options.barDesktops
 
     // Positions run along the bar: y in a vertical bar, x in a horizontal one.
     function along(item: Item): real {

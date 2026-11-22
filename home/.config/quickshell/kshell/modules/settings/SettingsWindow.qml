@@ -265,6 +265,16 @@ FloatingWindow {
                 }
             }
 
+            SettingRow {
+                icon: "virtual-desktops"
+                label: "Show virtual desktops"
+                description: "The desktop pills in the bar. Keyboard shortcuts still switch desktops when they're hidden."
+                StyledSwitch {
+                    checked: Settings.options.barDesktops
+                    onToggled: Settings.options.barDesktops = !checked
+                }
+            }
+
             Block {
                 label: "System icons"
                 description: "Material Symbols, like Android, for Wi-Fi, battery, volume and other system icons. App icons stay Tela-circle. Changing them restarts the shell."
