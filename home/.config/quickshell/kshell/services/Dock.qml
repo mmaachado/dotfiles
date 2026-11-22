@@ -5,12 +5,14 @@ import Quickshell
 import Quickshell.Io
 
 // Pinned apps + running windows grouped by app, like Plasma's icon task manager.
-// Pins live in config/pinned.json (right-click an icon in the bar or launcher
-// to pin/unpin).
+// Pins live in config/pinned.json, which is personal and kept out of git; the first run
+// starts from config/pinned.default.json. Right-click an icon in the bar or
+// launcher to pin/unpin.
 Singleton {
     id: root
 
     property list<string> pinned: []
+    property bool firstRun: false
 
     readonly property var groups: {
         const out = root.pinned.map(id => ({ id, pinned: true, windows: [] }));
@@ -96,6 +98,24 @@ Singleton {
                 root.pinned = JSON.parse(text()).map(root.norm);
             } catch (e) {
                 console.warn("pinned.json:", e);
+            }
+        }
+        // First run: start from the default pins. pinned.json is personal
+        // and kept out of git.
+        onLoadFailed: err => {
+            if (err === FileViewError.FileNotFound)
+                root.firstRun = true;
+        }
+    }
+
+    FileView {
+        id: defaults
+        path: root.firstRun ? Quickshell.shellDir + "/config/pinned.default.json" : ""
+        onLoaded: {
+            try {
+                root.save(JSON.parse(text()).map(root.norm));
+            } catch (e) {
+                console.warn("pinned.default.json:", e);
             }
         }
     }

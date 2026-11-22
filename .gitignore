@@ -1,3 +1,8 @@
 __pycache__/
 *.pyc
 .venv/
+
+# Personal KShell config, written by the shell itself. Defaults live in
+# config/Settings.qml and config/pinned.default.json.
+home/.config/quickshell/kshell/config/settings.json
+home/.config/quickshell/kshell/config/pinned.json
