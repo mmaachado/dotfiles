@@ -172,9 +172,13 @@ fonts() {
     local general=(font menuFont toolBarFont smallestReadableFont fixed)
     case "${1:-on}" in
         on)
+            # Read the list once: with pipefail, `fc-list | grep -q` fails when
+            # grep stops reading early. fc-list prints comma-separated lists.
+            local families
+            families=$(fc-list : family | tr ',' '\n')
             for f in "$UI_FONT" "$MONO_FONT"; do
-                fc-list : family | grep -qxF "$f" \
-                    || echo "warning: $f isn't installed (./install.py packages -g fonts)" >&2
+                grep -qxF "$f" <<<"$families" \
+                    || echo "warning: $f isn't installed (./install.py fonts --no-apply)" >&2
             done
             kwriteconfig6 --file kdeglobals --group General --key font "$(qfont "$UI_FONT" 10)"
             kwriteconfig6 --file kdeglobals --group General --key menuFont "$(qfont "$UI_FONT" 10)"
