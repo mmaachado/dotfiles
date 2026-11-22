@@ -4,7 +4,8 @@
 [release]
 name = "droid"
 version = "1.0.0"
-# Android dessert names, in Android's order: Cupcake, Donut, Eclair, ...
+# Each major version takes the next Android dessert (1.x Cupcake, 2.x Donut,
+# then Eclair, ...); minor releases keep the codename. See RELEASES.md.
 codename = "Cupcake"
 description = "Plasma-based Quickshell desktop"
 

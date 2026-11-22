@@ -1,8 +1,15 @@
-# droid
+<p align="center">
+  <img src="assets/droid-head_flat.png" alt="droid" width="160">
+</p>
 
-[![CI](https://github.com/mmaachado/droid/actions/workflows/ci.yml/badge.svg)](https://github.com/mmaachado/droid/actions/workflows/ci.yml)
+<h1 align="center">droid</h1>
 
-**droid 1.0 "Cupcake"**: a Plasma-based Quickshell desktop.
+<p align="center">
+  <a href="https://github.com/mmaachado/droid/actions/workflows/ci.yml"><img src="https://github.com/mmaachado/droid/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/mmaachado/droid/releases/latest"><img src="https://img.shields.io/github/v/release/mmaachado/droid" alt="Latest release"></a>
+</p>
+
+<p align="center"><b>A Plasma-based Quickshell desktop.</b></p>
 
 A desktop that keeps **KDE Plasma** underneath (KWin, session, settings, power,
 devices, wallpaper, desktop widgets) and replaces its panels with **KShell**, a
@@ -13,6 +20,15 @@ a desktop shell: KWin stays the window manager and Plasma the environment
 underneath.
 
 > Screenshots: _TODO_
+
+## releases
+
+<img src="assets/droid_cupcake.svg" alt="Cupcake" width="90" align="right">
+
+The current series is **1.x "Cupcake"**. Each major version takes the next
+Android dessert in order, so 2.0 will be Donut. Minor releases (1.1, 1.2, ...)
+keep the codename. See [RELEASES.md](RELEASES.md) for what each release
+brought.
 
 ## install
 
@@ -39,8 +55,6 @@ cd ~/droid
 
 Packages, linked paths and the release (version and codename) live in
 [`droid.toml`](droid.toml). `./install.py version` prints them.
-
-Releases are named after Android's desserts, in order: 1.0 is Cupcake.
 
 The core idea is to keep KDE Plasma as the desktop environment and use Quickshell as a custom visual and interaction layer. Retaining KDE's mature infrastructure while gaining the flexibility to build a modern, cohesive interface inspired by Hyprland, Niri, and bespoke Wayland desktops.
 
@@ -79,3 +93,13 @@ KShell follows your KDE colour scheme, accent colour, icons and animation speed.
 ./install.py kshell disable     # Plasma panels and default shortcuts come back
 ./install.py unlink --restore   # put back the files that were replaced
 ```
+
+## credits
+
+The Android robot is reproduced or modified from work created and shared by
+Google and used according to terms described in the Creative Commons 3.0
+Attribution License. Android is a trademark of Google LLC; droid isn't
+affiliated with or endorsed by Google. Google Sans Flex and Google Sans Code
+are licensed under the SIL Open Font License, and the system icons come from
+Material Symbols (Apache 2.0) through
+[droid-icons](https://github.com/mmaachado/droid-icons).
