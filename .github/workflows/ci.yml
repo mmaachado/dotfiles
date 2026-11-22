@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DAEMON: home/.config/quickshell/kshell/daemon
+  SHADERS: home/.config/quickshell/kshell/shaders
+
+jobs:
+  rust:
+    name: kshelld (fmt, clippy, test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.DAEMON }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ${{ env.DAEMON }}
+      - run: cargo fmt --check
+      - run: cargo clippy --locked --all-targets -- -D warnings
+      - run: cargo test --locked
+
+  python:
+    name: Installer (ruff, manifest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/ruff-action@v3
+        with:
+          version: "0.17.3"
+          src: installer install.py
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: droid.toml is valid and matches kshelld's version
+        run: |
+          python - <<'PY'
+          import tomllib
+          from pathlib import Path
+
+          droid = tomllib.loads(Path("droid.toml").read_text())
+          release = droid["release"]
+          for key in ("name", "version", "codename"):
+              assert release.get(key), f"[release] is missing {key}"
+          cargo = tomllib.loads(Path("${{ env.DAEMON }}/Cargo.toml").read_text())
+          assert cargo["package"]["version"] == release["version"], (
+              f"kshelld is {cargo['package']['version']}, droid.toml says {release['version']}"
+          )
+          for rel in droid["links"]["paths"]:
+              assert (Path("home") / rel).exists(), f"linked path missing: home/{rel}"
+          print(f"{release['name']} {release['version']} ({release['codename']})")
+          PY
+      - name: Config JSON parses
+        run: |
+          for f in home/.config/quickshell/kshell/config/*.json; do
+            python -m json.tool "$f" > /dev/null || { echo "::error file=$f::invalid JSON"; exit 1; }
+          done
+
+  shell:
+    name: Scripts (shellcheck, zsh -n)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: shellcheck install.sh home/.local/bin/kshell
+      - run: sudo apt-get install -y --no-install-recommends zsh
+      - name: zsh syntax
+        run: |
+          zsh -n home/.local/bin/pacman_updates
+          zsh -n home/.zshrc
+          zsh -n home/.zprofile
+
+  shaders:
+    name: Shaders compile
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - run: pacman -Syu --noconfirm --needed qt6-shadertools git
+      - uses: actions/checkout@v4
+      - name: Compile every shader with qsb
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          for f in "$SHADERS"/*.frag; do
+            /usr/lib/qt6/bin/qsb --qt6 -o "$f.qsb" "$f"
+          done
+      # qsb output depends on the Qt version, which moves with Arch, so a
+      # difference is a hint to recompile rather than a failure.
+      - name: Committed .qsb files are up to date
+        run: |
+          if ! git diff --quiet -- "$SHADERS"; then
+            echo "::warning::Some .qsb files differ from a fresh compile. Recompile them with /usr/lib/qt6/bin/qsb --qt6 -o X.frag.qsb X.frag"
+            git diff --stat -- "$SHADERS"
+          fi
+
+  # QML isn't linted: qmllint can't resolve Quickshell's qs.* modules
+  # without a running Quickshell, so it would only report false errors.
