@@ -13,26 +13,35 @@ Singleton {
     property bool session
     property bool wallpapers
     property bool themes
+    property bool clipboard
     property bool dnd
     // Name of the screen the drawers open on (empty = any)
     property string screen: ""
 
-    readonly property bool anyOpen: launcher || dashboard || session || wallpapers || themes
+    readonly property bool anyOpen: launcher || dashboard || session || wallpapers || themes || clipboard
+
+    // The dashboard lives in the notch, so where the notch is kept to the
+    // primary display it opens there.
+    function screenFor(name: string, screenName: string): string {
+        if (name === "dashboard" && Settings.options.notchDisplays === "primary" && Displays.primary)
+            return Displays.primary;
+        return screenName || Bridge.activeScreen;
+    }
 
     function toggle(name: string, screenName: string): void {
         const was = root[name];
         closeAll();
         if (!was) {
-            root.screen = screenName || Bridge.activeScreen;
+            root.screen = root.screenFor(name, screenName);
             root[name] = true;
         }
     }
 
     function show(name: string, screenName: string): void {
-        if (root[name] && root.screen === screenName)
+        if (root[name] && root.screen === root.screenFor(name, screenName))
             return;
         closeAll();
-        root.screen = screenName || Bridge.activeScreen;
+        root.screen = root.screenFor(name, screenName);
         root[name] = true;
     }
 
@@ -42,6 +51,7 @@ Singleton {
         session = false;
         wallpapers = false;
         themes = false;
+        clipboard = false;
     }
 
     Connections {
@@ -77,13 +87,17 @@ Singleton {
         function toggle(): void { root.toggle("themes", ""); }
     }
     IpcHandler {
+        target: "clipboard"
+        function toggle(): void { root.toggle("clipboard", ""); }
+    }
+    IpcHandler {
         target: "settings"
         function toggle(): void { Settings.toggle(); }
         function open(): void { Settings.open = true; }
         function close(): void { Settings.open = false; }
         // `kshell ipc settings page dock`
         function page(name: string): void {
-            const i = ["appearance", "notch", "tray", "dock", "wallpaper"].indexOf(name.toLowerCase());
+            const i = ["appearance", "notch", "tray", "dock", "wallpaper", "displays"].indexOf(name.toLowerCase());
             if (i >= 0)
                 Settings.page = i;
             Settings.open = true;

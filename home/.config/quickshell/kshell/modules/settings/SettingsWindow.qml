@@ -23,6 +23,7 @@ FloatingWindow {
         { name: "Tray", icon: "preferences-desktop-notification-symbolic" },
         { name: "Dock", icon: "view-pin-symbolic" },
         { name: "Wallpaper", icon: "preferences-desktop-wallpaper-symbolic" },
+        { name: "Displays", icon: "video-display-symbolic" },
     ]
 
     title: "KShell Settings"
@@ -35,143 +36,8 @@ FloatingWindow {
 
     // ── Building blocks ──────────────────────────────────────────────
 
-    // A labelled row with an optional description and a control on the right.
-    component SettingRow: Rectangle {
-        id: row
-        property string label
-        property string description
-        property string icon
-        default property alias control: slot.data
-
-        width: parent?.width ?? 0
-        implicitHeight: Math.max(64, text.implicitHeight + 28)
-        radius: Appearance.sizes.radius
-        color: Appearance.colors.surface
-
-        Icon {
-            id: rowIcon
-            visible: row.icon !== ""
-            anchors.left: parent.left
-            anchors.leftMargin: 16
-            anchors.verticalCenter: parent.verticalCenter
-            name: row.icon
-            size: 24
-        }
-
-        Column {
-            id: text
-            anchors.left: rowIcon.visible ? rowIcon.right : parent.left
-            anchors.leftMargin: 16
-            anchors.right: slot.left
-            anchors.rightMargin: 16
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 2
-
-            StyledText {
-                width: parent.width
-                text: row.label
-                font.pointSize: Appearance.font.normal + 0.5
-            }
-            StyledText {
-                width: parent.width
-                visible: text !== ""
-                text: row.description
-                color: Appearance.colors.textDim
-                font.pointSize: Appearance.font.small
-                wrapMode: Text.WordWrap
-                elide: Text.ElideNone
-            }
-        }
-
-        Row {
-            id: slot
-            anchors.right: parent.right
-            anchors.rightMargin: 16
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 6
-        }
-    }
-
-    component PillButton: Rectangle {
-        id: btn
-        property string label
-        property bool primary
-        signal clicked
-
-        implicitWidth: btnLabel.implicitWidth + 28
-        implicitHeight: 34
-        radius: height / 2
-        color: primary ? Appearance.colors.primary : Appearance.colors.surfaceHigh
-
-        StyledText {
-            id: btnLabel
-            anchors.centerIn: parent
-            text: btn.label
-            color: btn.primary ? Appearance.colors.onPrimary : Appearance.colors.text
-        }
-        StateLayer {
-            tint: btn.primary ? Appearance.colors.onPrimary : Appearance.colors.text
-            onClicked: btn.clicked()
-        }
-    }
-
-    component Heading: StyledText {
-        width: parent?.width ?? 0
-        topPadding: 8
-        font.pointSize: Appearance.font.large
-        font.bold: true
-    }
-
-    component Hint: StyledText {
-        width: parent?.width ?? 0
-        color: Appearance.colors.textDim
-        font.pointSize: Appearance.font.small
-        wrapMode: Text.WordWrap
-        elide: Text.ElideNone
-    }
-
-    // Like SettingRow, but its controls flow underneath the label (for
-    // choices that need more room than the right-hand side of a row).
-    component Block: Rectangle {
-        id: block
-        property string label
-        property string description
-        default property alias body: flow.data
-
-        width: parent?.width ?? 0
-        implicitHeight: col.implicitHeight + 32
-        radius: Appearance.sizes.radius
-        color: Appearance.colors.surface
-
-        Column {
-            id: col
-            x: 16
-            y: 16
-            width: parent.width - 32
-            spacing: 2
-
-            StyledText {
-                width: parent.width
-                text: block.label
-                font.pointSize: Appearance.font.normal + 0.5
-            }
-            StyledText {
-                width: parent.width
-                visible: text !== ""
-                text: block.description
-                color: Appearance.colors.textDim
-                font.pointSize: Appearance.font.small
-                wrapMode: Text.WordWrap
-                elide: Text.ElideNone
-            }
-            Item { width: 1; height: 10 }
-            Flow {
-                id: flow
-                width: parent.width
-                spacing: 8
-            }
-        }
-    }
+    // SettingRow, Block, PillButton, Heading and Hint have their own files
+    // here, so other files can use them too.
 
     component Swatch: Rectangle {
         id: swatch
@@ -292,7 +158,7 @@ FloatingWindow {
             }
 
             Loader {
-                sourceComponent: [appearancePage, notchPage, trayPage, dockPage, wallpaperPage][Settings.page]
+                sourceComponent: [appearancePage, notchPage, trayPage, dockPage, wallpaperPage, displaysPage][Settings.page]
             }
         }
     }
@@ -311,6 +177,16 @@ FloatingWindow {
                 StyledSwitch {
                     checked: Settings.options.backdropBlur
                     onToggled: Settings.options.backdropBlur = !checked
+                }
+            }
+
+            SettingRow {
+                icon: "audio-volume-high"
+                label: "KShell OSD"
+                description: "Show volume, brightness and other changes in the frame instead of Plasma's popup."
+                StyledSwitch {
+                    checked: Settings.options.osd
+                    onToggled: Settings.options.osd = !checked
                 }
             }
 
@@ -755,6 +631,14 @@ FloatingWindow {
     }
 
     Component {
+        id: displaysPage
+
+        DisplaysPage {
+            width: content.width
+        }
+    }
+
+    Component {
         id: wallpaperPage
 
         Column {
@@ -777,6 +661,66 @@ FloatingWindow {
                     visible: Settings.options.wallpaperDir !== ""
                     label: "Reset"
                     onClicked: Settings.options.wallpaperDir = ""
+                }
+            }
+
+            Block {
+                visible: Quickshell.screens.length > 1
+                label: "Displays"
+                description: Settings.options.wallpaperMode === "same"
+                    ? "A wallpaper you pick goes on every display."
+                    : "A wallpaper you pick goes on the display the picker is open on."
+
+                Repeater {
+                    model: [["same", "Same on all displays"], ["per-display", "One per display"]]
+                    PillButton {
+                        required property var modelData
+                        label: modelData[1]
+                        primary: Settings.options.wallpaperMode === modelData[0]
+                        onClicked: Settings.options.wallpaperMode = modelData[0]
+                    }
+                }
+            }
+
+            // How the wallpaper fills each display; a landscape picture on a
+            // portrait screen usually wants Fit.
+            Repeater {
+                model: Quickshell.screens
+
+                Block {
+                    id: fillBlock
+                    required property ShellScreen modelData
+                    readonly property string fill: Wallpapers.fillOn(modelData.name)
+                    label: Quickshell.screens.length > 1
+                        ? `Fill on ${modelData.name} (${modelData.width}×${modelData.height})` : "Fill"
+                    description: ({
+                        crop: "Fills the display, cutting off what doesn't fit.",
+                        fit: "Shows the whole picture; the space around it is blurred or black.",
+                        stretch: "Fills the display, distorting the picture.",
+                        center: "At its own size in the middle.",
+                        tile: "Repeated at its own size.",
+                    })[fill]
+
+                    Repeater {
+                        model: [["crop", "Scaled and cropped"], ["fit", "Fit"], ["stretch", "Stretch"], ["center", "Centered"], ["tile", "Tiled"]]
+                        PillButton {
+                            required property var modelData
+                            label: modelData[1]
+                            primary: fillBlock.fill === modelData[0]
+                            onClicked: Wallpapers.setFill(fillBlock.modelData.name, modelData[0])
+                        }
+                    }
+                }
+            }
+
+            SettingRow {
+                visible: Quickshell.screens.some(s => ["fit", "center"].includes(Wallpapers.fillOn(s.name)))
+                icon: "blurfx"
+                label: "Blur the empty space"
+                description: "Around a fitted or centered wallpaper. When off, it's black."
+                StyledSwitch {
+                    checked: Settings.options.wallpaperBlur
+                    onToggled: Settings.options.wallpaperBlur = !checked
                 }
             }
 
@@ -871,6 +815,8 @@ FloatingWindow {
                     property vector2d resolution: Qt.vector2d(width, height)
                     property vector2d fromSize: Qt.vector2d(fromTex.implicitWidth, fromTex.implicitHeight)
                     property vector2d toSize: Qt.vector2d(toTex.implicitWidth, toTex.implicitHeight)
+                    property real fillMode: 2 // crop, to fill the preview
+                    property real blurFill: 0
 
                     anchors.fill: parent
                     fragmentShader: Qt.resolvedUrl(`../../shaders/${fxPreview.effect}.frag.qsb`)

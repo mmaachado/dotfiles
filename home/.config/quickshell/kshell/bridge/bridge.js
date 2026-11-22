@@ -51,8 +51,40 @@ function hook(w) {
         w.frameGeometryChanged.connect(() => { if (!w.move && !w.resize) push(); });
 }
 
+// Plasma's OSD (volume / brightness keys, ...) is hidden while KShell draws
+// its own: plasmashell keeps deciding *when* to show one, kshelld relays
+// that, and the window itself is made invisible here. The flag lives in the
+// bridge (Settings → OSD); it's cached so a new OSD window is hidden before
+// its first frame, and refreshed whenever one appears.
+let hideOsd = false;
+function plasmaOsd(w) {
+    return w.onScreenDisplay && w.resourceName === "plasmashell";
+}
+function applyOsd() {
+    for (const w of arr(workspace.windowList()))
+        if (plasmaOsd(w))
+            w.opacity = hideOsd ? 0 : 1;
+}
+function refreshOsd() {
+    callDBus(SVC, PATH, IFACE, "HidePlasmaOsd", v => {
+        if (!!v !== hideOsd) {
+            hideOsd = !!v;
+            applyOsd();
+        }
+    });
+}
+
 arr(workspace.windowList()).forEach(hook);
-workspace.windowAdded.connect(w => { hook(w); push(); });
+workspace.windowAdded.connect(w => {
+    if (plasmaOsd(w)) {
+        w.opacity = hideOsd ? 0 : 1;
+        refreshOsd();
+        return;
+    }
+    hook(w);
+    push();
+refreshOsd();
+});
 workspace.windowRemoved.connect(push);
 workspace.windowActivated.connect(push);
 workspace.currentDesktopChanged.connect(push);
@@ -66,7 +98,9 @@ registerShortcut("KShell Launcher", "KShell: Toggle app launcher", "Meta+Space",
 registerShortcut("KShell Dashboard", "KShell: Toggle dashboard", "Meta+Alt+D", ipc("dashboard toggle"));
 registerShortcut("KShell Wallpapers", "KShell: Toggle wallpaper picker", "Meta+W", ipc("wallpapers toggle"));
 registerShortcut("KShell Themes", "KShell: Toggle theme picker", "Meta+Shift+T", ipc("themes toggle"));
+registerShortcut("KShell Clipboard", "KShell: Toggle clipboard history", "Meta+V", ipc("clipboard toggle"));
 registerShortcut("KShell Settings", "KShell: Toggle settings", "", ipc("settings toggle"));
 registerShortcut("KShell Session", "KShell: Toggle session menu", "", ipc("session toggle"));
 
 push();
+refreshOsd();

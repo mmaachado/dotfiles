@@ -39,6 +39,13 @@ Singleton {
             // Empty = ~/Pictures/Wallpapers.
             property string wallpaperDir: ""
             property bool wallpaperTransition: true
+            // same (every display) | per-display (the one the picker opened on).
+            property string wallpaperMode: "same"
+            // How each display's wallpaper fills it, by screen name: crop |
+            // fit | stretch | center | tile. Missing = crop (Plasma's default).
+            property var wallpaperFill: ({})
+            // Fit and center: blur the wallpaper into the empty space (else black).
+            property bool wallpaperBlur: true
             // Length of the wallpaper transition, in ms (scaled by KDE's animation speed).
             property int transitionDuration: 2600
             // liquid | fade | wipe | circle | pixelate | dissolve | random
@@ -62,6 +69,15 @@ Singleton {
 
             // Status icons in the bar: ethernet, wifi, bluetooth, sound, battery, power.
             property list<string> statusIcons: ["ethernet", "sound"]
+
+            // Multiple displays: where the bar and the notch show (all |
+            // primary), and where notification popups appear (primary | active).
+            property string barDisplays: "all"
+            property string notchDisplays: "all"
+            property string popupDisplays: "primary"
+
+            // Draw KShell's own OSD (volume, brightness, ...) instead of Plasma's.
+            property bool osd: true
 
             // Collapsed notch: time | date | datetime, plus what else it shows.
             property string notchClock: "time"

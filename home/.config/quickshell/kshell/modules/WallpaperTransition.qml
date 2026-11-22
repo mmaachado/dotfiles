@@ -8,8 +8,8 @@ import qs.services
 // Transition between wallpapers (effects in shaders/, picked in Settings). A
 // click-through surface on the Bottom layer (over the Plasma desktop, under
 // windows) floods from what it shows to
-// Wallpapers.target: the wallpaper being previewed in the picker, else the
-// current one. Once a flood towards an applied wallpaper ends, Plasma is told
+// Wallpapers.targetFor(screen): the wallpaper being previewed in the picker,
+// else the screen's current one. Once a flood towards an applied wallpaper ends, Plasma is told
 // to switch underneath, and the surface fades away.
 //
 // Images load asynchronously, so the shader samples from a pool of three
@@ -44,15 +44,18 @@ Scope {
         asynchronous: true
         cache: false
         fillMode: Image.PreserveAspectCrop
-        // Snapshots from grabToImage are already screen-sized.
-        sourceSize: String(source).startsWith("file:") ? Qt.size(root.screen.width, root.screen.height) : undefined
+        // Snapshots from grabToImage are already screen-sized. Centered and
+        // tiled wallpapers are drawn at their own size, so load them whole.
+        sourceSize: String(source).startsWith("file:") && !["center", "tile"].includes(Wallpapers.fillOn(root.screen.name))
+            ? Qt.size(root.screen.width, root.screen.height) : undefined
         onStatusChanged: {
             root.trySnap();
             root.tryStart();
         }
     }
 
-    readonly property string target: Wallpapers.target
+    readonly property string target: Wallpapers.targetFor(screen.name)
+    readonly property string applied: Wallpapers.appliedFor[screen.name] ?? ""
     onTargetChanged: go()
 
     Connections {
@@ -74,14 +77,14 @@ Scope {
         if (!t)
             return;
         if (!root.running) {
-            if (t === Wallpapers.applied)
+            if (t === root.applied)
                 return;
             root.running = true;
             const e = Settings.options.transitionEffect;
             root.effect = e === "random" ? root.effects[Math.floor(Math.random() * root.effects.length)]
                 : root.effects.includes(e) ? e : "liquid";
             root.fromSlot = s0;
-            s0.source = Wallpapers.url(Wallpapers.applied || t);
+            s0.source = Wallpapers.url(root.applied || t);
             fx.progress = 0;
             stage.opacity = 1;
             floodTo(t);
@@ -145,7 +148,7 @@ Scope {
         root.waiting = false;
         if (root.toSlot.status !== Image.Ready) {
             stop();
-            Wallpapers.commit(root.to);
+            Wallpapers.commit(root.to, root.screen.name);
             return;
         }
         root.mapped = true;
@@ -155,8 +158,8 @@ Scope {
     // Flood finished: hand an applied wallpaper to Plasma, and once Plasma
     // shows what we show, fade out. Previews just stay up.
     function settle(): void {
-        Wallpapers.commit(root.to);
-        if (root.to === Wallpapers.applied)
+        Wallpapers.commit(root.to, root.screen.name);
+        if (root.to === root.applied)
             hold.restart();
     }
 
@@ -209,6 +212,9 @@ Scope {
                 property vector2d toSize: Qt.vector2d(root.toSlot.implicitWidth, root.toSlot.implicitHeight)
                 property var fromTex: root.fromSlot
                 property var toTex: root.toSlot
+                // Fill like Plasma does on this screen (Settings → Wallpaper).
+                property real fillMode: Wallpapers.fillCode(root.screen.name)
+                property real blurFill: Settings.options.wallpaperBlur ? 1 : 0
 
                 anchors.fill: parent
                 fragmentShader: Qt.resolvedUrl(`../shaders/${root.effect}.frag.qsb`)

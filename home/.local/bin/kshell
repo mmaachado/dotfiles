@@ -4,6 +4,8 @@
 #   kshell disable   stop KShell and put the Plasma panels back
 #   kshell restart   restart KShell
 #   kshell build     build and install the native backend (kshelld) into ~/.local/bin
+#   kshell icons on  install droid-icons (Material system icons over Tela-circle) and use it
+#   kshell icons off back to plain Tela-circle
 #   kshell ipc ...   e.g. `kshell ipc launcher toggle`
 set -euo pipefail
 
@@ -14,6 +16,8 @@ BACKUP="$STATE/panels-backup.appletsrc"
 AUTOSTART="$HOME/.config/autostart/kshell.desktop"
 SHELLDIR="$HOME/.config/quickshell/$CONFIG"
 KSHELLD="$HOME/.local/bin/kshelld"
+DROID_ICONS="${DROID_ICONS:-$HOME/Documents/GitHub/droid-icons}"
+DROID_ICONS_REPO=https://github.com/mmaachado/droid-icons.git
 
 plasma_js() { qdbus6 org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "$1"; }
 
@@ -32,14 +36,26 @@ start() {
 }
 
 stop() {
-    # Qt can crash tearing down an open settings window on exit, and the crash
-    # handler would then start a second copy; close it first.
-    qs -c "$CONFIG" ipc call settings close >/dev/null 2>&1 && sleep 0.3 || true
+    # Qt can crash tearing down an open settings window or a focused search
+    # field on exit, and the crash handler would then start a second copy;
+    # close them first.
+    qs -c "$CONFIG" ipc call settings close >/dev/null 2>&1 || true
+    qs -c "$CONFIG" ipc call drawers close >/dev/null 2>&1 && sleep 0.3 || true
     qs -c "$CONFIG" kill >/dev/null 2>&1 || true
-    # Quickshell can hang on exit; don't leave a half-dead instance behind.
-    for _ in 1 2 3 4 5; do
-        pgrep -u "$USER" -f "$PATTERN" >/dev/null || return 0
-        sleep 0.2
+    # Quickshell can hang on exit, and a crash-restarted copy runs as a bare
+    # `quickshell` the pattern below can't see; `qs list` still finds it.
+    # Keep going until neither shows anything for a moment.
+    local quiet=0
+    for _ in $(seq 20); do
+        local pids
+        pids=$( { pgrep -u "$USER" -f "$PATTERN"; qs -c "$CONFIG" list 2>/dev/null | awk '/Process ID:/ {print $3}'; } | sort -u)
+        if [[ -z $pids ]]; then
+            (( ++quiet >= 4 )) && return 0
+        else
+            quiet=0
+            kill $pids 2>/dev/null || true
+        fi
+        sleep 0.25
     done
     pkill -9 -u "$USER" -f "$PATTERN" || true
 }
@@ -106,11 +122,36 @@ PY
     echo "KShell disabled, Plasma panels restored"
 }
 
+icons() {
+    case "${1:-on}" in
+        on)
+            if [[ ! -d $DROID_ICONS ]]; then
+                git clone --quiet "$DROID_ICONS_REPO" "$DROID_ICONS"
+            fi
+            "$DROID_ICONS/install.sh"
+            set_icon_theme droid-icons
+            ;;
+        off) set_icon_theme Tela-circle ;;
+        *) echo "usage: kshell icons on|off" >&2; exit 1 ;;
+    esac
+}
+
+set_icon_theme() {
+    kwriteconfig6 --file kdeglobals --group Icons --key Theme "$1"
+    # Tell running KDE apps; KShell resolves icons at load, so restart it.
+    dbus-send --session --type=signal /KIconLoader org.kde.KIconLoader.iconChanged int32:0 || true
+    if pgrep -u "$USER" -f "$PATTERN" >/dev/null; then
+        stop; sleep 0.5; start
+    fi
+    echo "Icon theme: $1"
+}
+
 case "${1:-}" in
     enable) enable ;;
     disable) disable ;;
     restart) stop; sleep 0.5; start ;;
     build) build ;;
+    icons) shift; icons "$@" ;;
     ipc) shift; qs -c "$CONFIG" ipc call "$@" ;;
-    *) sed -n '2,7p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
+    *) sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
 esac

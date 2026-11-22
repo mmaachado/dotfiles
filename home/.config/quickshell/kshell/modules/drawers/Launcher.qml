@@ -23,6 +23,10 @@ Item {
             input.text = "";
             list.currentIndex = 0;
             input.forceActiveFocus();
+        } else {
+            // Don't keep keyboard focus while hidden: Qt crashes tearing down
+            // a focused text input when the shell exits.
+            input.focus = false;
         }
     }
 
@@ -65,6 +69,10 @@ Item {
             id: row
             required property DesktopEntry modelData
             required property int index
+            // Text on the highlight follows it (light containers in e.g.
+            // Monochrome schemes need dark text).
+            readonly property bool current: ListView.isCurrentItem
+            readonly property color ink: current ? Appearance.colors.onPrimaryContainer : Appearance.colors.text
 
             width: list.width
             height: root.rowHeight
@@ -110,13 +118,14 @@ Item {
                 StyledText {
                     width: parent.width
                     text: row.modelData.name
+                    color: row.ink
                     font.pointSize: Appearance.font.large
                 }
                 StyledText {
                     width: parent.width
                     text: row.modelData.comment || row.modelData.genericName
                     visible: text !== ""
-                    color: Appearance.colors.textDim
+                    color: Qt.alpha(row.ink, 0.7)
                     font.pointSize: Appearance.font.small
                 }
             }

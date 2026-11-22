@@ -15,6 +15,8 @@ ShellRoot {
     // Singletons load on first use; this one has to run from the start to
     // keep the Material colours in step with the wallpaper and theme.
     readonly property bool materialColours: Scheme.active
+    // Same for clipboard history: it has to record from the start.
+    readonly property int clipboardEntries: Clipboard.history.length
 
     LazyLoader {
         active: Settings.open

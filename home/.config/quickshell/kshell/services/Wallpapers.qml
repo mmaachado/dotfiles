@@ -6,72 +6,200 @@ import Quickshell.Io
 import qs.config
 
 // Wallpapers from ~/Pictures/Wallpapers (or the folder set in Settings). Plasma still owns the wallpaper:
-// applying goes through plasma-apply-wallpaperimage, and the current one is
-// read back from Plasma's config.
+// it's set and read back per display through Plasma's scripting API, where
+// each desktop containment belongs to a screen, matched to ours by geometry.
 //
-// Every screen's WallpaperTransition floods from what it shows to `target`
-// (the wallpaper being previewed in the picker, else `current`). Plasma is
-// only told once the flood has finished, so its own crossfade happens out of
-// sight underneath the overlay.
+// Settings.options.wallpaperMode picks whether a wallpaper goes on every
+// display ("same") or only the one the picker was opened on ("per-display").
+//
+// Every screen's WallpaperTransition floods from what it shows to
+// targetFor(screen) (the wallpaper being previewed in the picker, else the
+// screen's current one). Plasma is only told once the flood has finished, so
+// its own crossfade happens out of sight underneath the overlay.
 Singleton {
     id: root
 
-    // Emitted when a wallpaper is applied; screens call commit(to) once
-    // their flood towards it is done.
+    // Emitted when a wallpaper is applied; screens call commit(to, screen)
+    // once their flood towards it is done.
     signal changing(to: string)
-    property string pending: ""
 
     readonly property string dir: Settings.options.wallpaperDir || Quickshell.env("HOME") + "/Pictures/Wallpapers"
     onDirChanged: refresh()
     property list<string> files: []
-    property string current: ""
-    // What Plasma actually shows.
-    property string applied: ""
-    // Wallpaper highlighted in the picker, shown on the desktop until applied
-    // or the picker closes.
-    property string preview: ""
-    readonly property string target: preview || current
     property bool scanned: false
+
+    readonly property bool perDisplay: Settings.options.wallpaperMode === "per-display"
+
+    // Per screen name. Always replaced, never mutated, so bindings update.
+    // What each screen should show.
+    property var currentFor: ({})
+    // What Plasma actually shows.
+    property var appliedFor: ({})
+    // Applied but not yet handed to Plasma.
+    property var pendingFor: ({})
+
+    // The primary display's wallpaper: Material colours follow it.
+    readonly property string current: currentFor[Displays.primary] ?? Object.values(currentFor).find(p => p) ?? ""
+
+    // Wallpaper highlighted in the picker, shown on the desktop until applied
+    // or the picker closes; on one screen, or all ("").
+    property string preview: ""
+    property string previewScreen: ""
+
+    // ── Fill mode ────────────────────────────────────────────────────
+
+    // Plasma's org.kde.image FillMode is a Qt Image.FillMode.
+    readonly property var fillModes: ({ stretch: 0, fit: 1, crop: 2, tile: 3, center: 6 })
+
+    function fillOn(screen: string): string {
+        const f = (Settings.options.wallpaperFill ?? {})[screen];
+        return f in root.fillModes ? f : "crop";
+    }
+    function fillCode(screen: string): int {
+        return root.fillModes[root.fillOn(screen)];
+    }
+    function setFill(screen: string, fill: string): void {
+        const m = Object.assign({}, Settings.options.wallpaperFill ?? {});
+        m[screen] = fill;
+        Settings.options.wallpaperFill = m;
+    }
+
+    // Script lines that set a desktop's fill to match ours.
+    function fillScript(screen: string): string {
+        return `
+            d.writeConfig("FillMode", ${root.fillCode(screen)});
+            d.writeConfig("Blur", ${Settings.options.wallpaperBlur});
+            d.writeConfig("Color", "0,0,0");`;
+    }
+
+    // Run `body` (with `d` bound) on the desktop shown on `screen`.
+    function onDesktop(screen: string, body: string): void {
+        const s = Quickshell.screens.find(q => q.name === screen);
+        if (!s)
+            return;
+        root.plasma(`
+            for (const d of desktops()) {
+                const g = d.screen >= 0 ? screenGeometry(d.screen) : null;
+                if (!g || g.x !== ${s.x} || g.y !== ${s.y})
+                    continue;
+                d.wallpaperPlugin = "org.kde.image";
+                d.currentConfigGroup = ["Wallpaper", "org.kde.image", "General"];
+                ${body}
+            }`);
+    }
+
+    // Push fill changes made in the settings to Plasma.
+    Connections {
+        target: Settings.options
+        function onWallpaperFillChanged(): void { root.pushFill(); }
+        function onWallpaperBlurChanged(): void { root.pushFill(); }
+    }
+    function pushFill(): void {
+        for (const s of Quickshell.screens)
+            root.onDesktop(s.name, root.fillScript(s.name));
+    }
+
+    function currentOn(screen: string): string {
+        return root.currentFor[screen] ?? root.current;
+    }
+    function appliedOn(screen: string): string {
+        return root.appliedFor[screen] ?? "";
+    }
+    function targetFor(screen: string): string {
+        if (root.preview && (root.previewScreen === "" || root.previewScreen === screen))
+            return root.preview;
+        return root.currentFor[screen] ?? "";
+    }
+
+    // The screens a pick from the picker opened on `screen` goes to.
+    function screensFor(screen: string): list<string> {
+        if (!root.perDisplay)
+            return Quickshell.screens.map(s => s.name);
+        return [screen || Displays.primary];
+    }
+
+    function setPreview(path: string, screen: string): void {
+        root.previewScreen = root.perDisplay ? (screen || Displays.primary) : "";
+        root.preview = path;
+    }
 
     function refresh(): void {
         if (!scan.running)
             scan.running = true;
     }
 
-    function apply(path: string): void {
-        // Set current before clearing preview so `target` never flips back.
-        root.current = path;
-        root.preview = "";
-        if (path === root.applied && !root.pending)
-            return;
-        root.pending = path;
-        root.changing(path);
-        fallback.restart();
+    function withKey(map: var, key: string, value: var): var {
+        const m = Object.assign({}, map);
+        if (value === undefined)
+            delete m[key];
+        else
+            m[key] = value;
+        return m;
     }
 
-    // Hand the wallpaper to Plasma. Several screens may call this; only the
-    // first call for the pending wallpaper does anything.
-    function commit(path: string): void {
-        if (path !== root.pending)
+    function apply(path: string, screen: string): void {
+        const screens = root.screensFor(screen);
+        let current = Object.assign({}, root.currentFor);
+        let pending = Object.assign({}, root.pendingFor);
+        for (const s of screens) {
+            current[s] = path;
+            if (path !== root.appliedFor[s] || pending[s])
+                pending[s] = path;
+        }
+        // Set current before clearing preview so a target never flips back.
+        root.currentFor = current;
+        root.preview = "";
+        root.pendingFor = pending;
+        if (screens.some(s => pending[s] === path)) {
+            root.changing(path);
+            fallback.restart();
+        }
+    }
+
+    // Hand a screen's wallpaper to Plasma, once its flood is done.
+    function commit(path: string, screen: string): void {
+        if (root.pendingFor[screen] !== path)
             return;
-        root.pending = "";
-        root.applied = path;
-        fallback.stop();
-        Quickshell.execDetached(["plasma-apply-wallpaperimage", path]);
+        root.pendingFor = root.withKey(root.pendingFor, screen, undefined);
+        root.appliedFor = root.withKey(root.appliedFor, screen, path);
+        root.onDesktop(screen, `${root.fillScript(screen)}
+                d.writeConfig("Image", ${JSON.stringify(root.url(path))});`);
+        if (Object.keys(root.pendingFor).length === 0)
+            fallback.stop();
+    }
+
+    function plasma(script: string): void {
+        Quickshell.execDetached(["qdbus6", "org.kde.plasmashell", "/PlasmaShell",
+            "org.kde.PlasmaShell.evaluateScript", script]);
     }
 
     // qs ipc call wallpaper set /path/to/image.jpg
+    // qs ipc call wallpaper setOn /path/to/image.jpg HDMI-A-2
     IpcHandler {
         target: "wallpaper"
-        function set(path: string): void { root.apply(path); }
+        function set(path: string): void { root.apply(path, ""); }
+        function setOn(path: string, screen: string): void {
+            // An explicit screen always means just that one.
+            let current = root.withKey(root.currentFor, screen, path);
+            root.currentFor = current;
+            if (path !== root.appliedFor[screen]) {
+                root.pendingFor = root.withKey(root.pendingFor, screen, path);
+                root.changing(path);
+                fallback.restart();
+            }
+        }
         function get(): string { return root.current; }
+        function getOn(screen: string): string { return root.currentFor[screen] ?? ""; }
     }
 
     // In case no transition runs (e.g. an image fails to load).
     Timer {
         id: fallback
         interval: 8000
-        onTriggered: root.commit(root.pending)
+        onTriggered: {
+            for (const [s, p] of Object.entries(root.pendingFor))
+                root.commit(p, s);
+        }
     }
 
     function name(path: string): string {
@@ -100,16 +228,77 @@ Singleton {
         }
     }
 
+    // ── Reading back what Plasma shows ───────────────────────────────
+
+    function readBack(): void {
+        if (!readProc.running)
+            readProc.running = true;
+        else
+            readAgain.restart();
+    }
+
+    Timer {
+        id: readAgain
+        interval: 300
+        onTriggered: root.readBack()
+    }
+
+    Process {
+        id: readProc
+        command: ["qdbus6", "org.kde.plasmashell", "/PlasmaShell", "org.kde.PlasmaShell.evaluateScript", `
+            const out = [];
+            for (const d of desktops()) {
+                if (d.screen < 0)
+                    continue;
+                const g = screenGeometry(d.screen);
+                d.currentConfigGroup = ["Wallpaper", "org.kde.image", "General"];
+                out.push(JSON.stringify({ x: g.x, y: g.y, image: d.wallpaperPlugin === "org.kde.image" ? d.readConfig("Image") : "" }));
+            }
+            print(out.join("\\n"));`]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let applied = Object.assign({}, root.appliedFor);
+                let current = Object.assign({}, root.currentFor);
+                for (const line of text.split("\n")) {
+                    let d;
+                    try {
+                        d = JSON.parse(line);
+                    } catch (e) {
+                        continue;
+                    }
+                    const s = Quickshell.screens.find(q => q.x === d.x && q.y === d.y);
+                    if (!s)
+                        continue;
+                    const path = d.image ? decodeURIComponent(String(d.image).replace(/^file:\/\//, "")) : "";
+                    applied[s.name] = path;
+                    if (!root.pendingFor[s.name])
+                        current[s.name] = path;
+                }
+                root.appliedFor = applied;
+                root.currentFor = current;
+            }
+        }
+    }
+
+    // Plasma writes its config when the wallpaper changes, from here or elsewhere.
     FileView {
         path: Quickshell.env("HOME") + "/.config/plasma-org.kde.plasma.desktop-appletsrc"
         watchChanges: true
-        onFileChanged: reload()
-        onLoaded: {
-            const m = text().match(/\[org\.kde\.image\]\[General\][^\[]*?\nImage=([^\n]+)/);
-            if (m && !root.pending) {
-                root.applied = decodeURIComponent(m[1].replace(/^file:\/\//, ""));
-                root.current = root.applied;
-            }
+        onFileChanged: root.readBack()
+        onLoaded: root.readBack()
+    }
+
+    // Plasma moves desktops between screens when displays change.
+    Connections {
+        target: Quickshell
+        function onScreensChanged(): void { readAgain.restart(); }
+    }
+    Variants {
+        model: Quickshell.screens
+        Connections {
+            required property ShellScreen modelData
+            target: modelData
+            function onGeometryChanged(): void { readAgain.restart(); }
         }
     }
 }
