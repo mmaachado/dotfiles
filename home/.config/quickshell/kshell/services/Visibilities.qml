@@ -20,20 +20,28 @@ Singleton {
 
     readonly property bool anyOpen: launcher || dashboard || session || wallpapers || themes || clipboard
 
+    // The dashboard lives in the notch, so where the notch is kept to the
+    // primary display it opens there.
+    function screenFor(name: string, screenName: string): string {
+        if (name === "dashboard" && Settings.options.notchDisplays === "primary" && Displays.primary)
+            return Displays.primary;
+        return screenName || Bridge.activeScreen;
+    }
+
     function toggle(name: string, screenName: string): void {
         const was = root[name];
         closeAll();
         if (!was) {
-            root.screen = screenName || Bridge.activeScreen;
+            root.screen = root.screenFor(name, screenName);
             root[name] = true;
         }
     }
 
     function show(name: string, screenName: string): void {
-        if (root[name] && root.screen === screenName)
+        if (root[name] && root.screen === root.screenFor(name, screenName))
             return;
         closeAll();
-        root.screen = screenName || Bridge.activeScreen;
+        root.screen = root.screenFor(name, screenName);
         root[name] = true;
     }
 

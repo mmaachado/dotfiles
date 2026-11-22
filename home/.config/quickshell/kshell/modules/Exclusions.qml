@@ -8,6 +8,8 @@ Scope {
     id: root
 
     required property ShellScreen screen
+    // The bar's width, or just the border where the bar is hidden.
+    property real leftZone: Appearance.sizes.barWidth
 
     component Strut: PanelWindow {
         screen: root.screen
@@ -19,7 +21,7 @@ Scope {
 
     Strut {
         anchors { left: true; top: true; bottom: true }
-        exclusiveZone: Appearance.sizes.barWidth
+        exclusiveZone: root.leftZone
     }
     Strut {
         anchors { top: true; left: true; right: true }

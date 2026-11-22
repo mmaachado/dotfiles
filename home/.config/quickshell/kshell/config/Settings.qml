@@ -63,6 +63,12 @@ Singleton {
             // Status icons in the bar: ethernet, wifi, bluetooth, sound, battery, power.
             property list<string> statusIcons: ["ethernet", "sound"]
 
+            // Multiple displays: where the bar and the notch show (all |
+            // primary), and where notification popups appear (primary | active).
+            property string barDisplays: "all"
+            property string notchDisplays: "all"
+            property string popupDisplays: "primary"
+
             // Draw KShell's own OSD (volume, brightness, ...) instead of Plasma's.
             property bool osd: true
 
