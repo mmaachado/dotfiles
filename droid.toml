@@ -19,11 +19,15 @@ repo = [
     "git",
     "pacman-contrib",
     "fzf",
-    "ttf-jetbrains-mono-nerd",
     "ttf-nerd-fonts-symbols",
     "ttf-nerd-fonts-symbols-mono",
     "noto-fonts-cjk",
 ]
+
+[packages.fonts]
+description = "Google Sans Flex (UI) and Google Sans Code (monospace), like Android"
+repo = ["ttf-googlesanscode-nerd", "noto-fonts", "noto-fonts-emoji"]
+aur = ["ttf-google-sans-flex-variable"]
 
 [packages.kshell]
 description = "KShell: the Quickshell layer on top of KDE Plasma"
@@ -56,6 +60,7 @@ repo = [
     "fd",
     "bluez",
     "bluez-utils",
+    "ttf-jetbrains-mono-nerd",
 ]
 aur = []
 
