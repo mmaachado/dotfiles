@@ -23,6 +23,16 @@ Column {
             width: parent.width - 48
             spacing: 4
 
+            // This major version's art (assets/droid_<codename>.svg).
+            Image {
+                anchors.horizontalCenter: parent.horizontalCenter
+                visible: status === Image.Ready
+                source: Release.art ? "file://" + Release.art : ""
+                sourceSize.height: 140
+                fillMode: Image.PreserveAspectFit
+                asynchronous: true
+            }
+
             StyledText {
                 width: parent.width
                 horizontalAlignment: Text.AlignHCenter
