@@ -53,7 +53,7 @@ stop() {
             (( ++quiet >= 4 )) && return 0
         else
             quiet=0
-            kill $pids 2>/dev/null || true
+            xargs -r kill <<<"$pids" 2>/dev/null || true
         fi
         sleep 0.25
     done
