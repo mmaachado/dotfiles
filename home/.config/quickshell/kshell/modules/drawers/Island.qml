@@ -16,6 +16,8 @@ Item {
     // 0 = hanging notch, 1 = flattened into the frame's top edge, leaving a
     // small clock there (ScreenShell animates it).
     required property real merge
+    // Thickness of the frame above the notch (a top bar makes it thicker).
+    property real topInset: Appearance.sizes.border
 
     readonly property bool expanded: Visibilities.dashboard && here
     readonly property int pad: Appearance.sizes.padding
@@ -54,9 +56,9 @@ Item {
     Item {
         id: edge
         x: root.r
-        y: -Appearance.sizes.border
+        y: -root.topInset
         width: root.collapsedW
-        height: Appearance.sizes.border
+        height: root.topInset
         visible: root.merge > 0.5 && !root.expanded
 
         HoverHandler {

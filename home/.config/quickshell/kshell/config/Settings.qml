@@ -70,6 +70,9 @@ Singleton {
             // Status icons in the bar: ethernet, wifi, bluetooth, sound, battery, power.
             property list<string> statusIcons: ["ethernet", "sound"]
 
+            // Which screen edge the bar sits on: left | top | right | bottom.
+            property string barPosition: "left"
+
             // Multiple displays: where the bar and the notch show (all |
             // primary), and where notification popups appear (primary | active).
             property string barDisplays: "all"

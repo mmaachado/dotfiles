@@ -172,7 +172,8 @@ Singleton {
     }
 
     // Which screen edge the bar sits on: left | top | right | bottom.
-    readonly property string barPosition: "left"
+    readonly property string barPosition: ["left", "top", "right", "bottom"].includes(Settings.options.barPosition)
+        ? Settings.options.barPosition : "left"
     readonly property bool barVertical: barPosition === "left" || barPosition === "right"
 
     readonly property QtObject sizes: QtObject {

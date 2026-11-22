@@ -5,7 +5,7 @@ import qs.services
 
 // The bar, on whichever screen edge Appearance.barPosition says. Vertical
 // (left/right): desktops and the active window at the top, apps centred,
-// tray/status/settings/power at the bottom. Horizontal (top/bottom): split
+// then power, settings, status and the tray down at the bottom. Horizontal (top/bottom): split
 // in two around a gap in the middle (`centerGap`) for the notch or the
 // launcher: desktops and apps on the left, tray to power on the right.
 Item {
@@ -45,6 +45,9 @@ Item {
         id: verticalLayout
 
         Item {
+            // Explicit: the Loader doesn't always resize an item it created
+            // while the bar had the other orientation.
+            anchors.fill: parent
             Column {
                 id: top
                 anchors.top: parent.top
@@ -84,17 +87,17 @@ Item {
                 anchors.horizontalCenter: parent.horizontalCenter
                 spacing: 10
 
-                Tray {
+                PowerButton {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+                SettingsButton {
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
                 Status {
                     anchors.horizontalCenter: parent.horizontalCenter
                     screenName: root.screenName
                 }
-                SettingsButton {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
-                PowerButton {
+                Tray {
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
             }
@@ -106,6 +109,7 @@ Item {
 
         Item {
             id: hbar
+            anchors.fill: parent
             // Each half's length, up to the gap in the middle.
             readonly property real half: Math.max(0, (width - root.centerGap) / 2 - 14)
 

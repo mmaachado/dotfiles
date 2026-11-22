@@ -246,6 +246,26 @@ FloatingWindow {
             }
 
             Block {
+                label: "Bar position"
+                description: ({
+                    left: "Down the left edge, as in Plasma's default layout.",
+                    right: "Down the right edge.",
+                    top: "Along the top, split around the notch.",
+                    bottom: "Along the bottom, split around the launcher.",
+                })[Appearance.barPosition]
+
+                Repeater {
+                    model: [["left", "Left"], ["top", "Top"], ["right", "Right"], ["bottom", "Bottom"]]
+                    PillButton {
+                        required property var modelData
+                        label: modelData[1]
+                        primary: Appearance.barPosition === modelData[0]
+                        onClicked: Settings.options.barPosition = modelData[0]
+                    }
+                }
+            }
+
+            Block {
                 label: "System icons"
                 description: "Material Symbols, like Android, for Wi-Fi, battery, volume and other system icons. App icons stay Tela-circle. Changing them restarts the shell."
 
