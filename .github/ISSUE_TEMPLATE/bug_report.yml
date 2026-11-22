@@ -1,0 +1,69 @@
+name: Bug report
+description: Something in droid doesn't work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting! Please check the open issues first.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Settings → Displays
+        2. Rotate the second display to Portrait
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Bar
+        - Notch / dashboard
+        - Drawers (launcher, wallpapers, themes, clipboard, session)
+        - Notifications / OSD
+        - Settings window
+        - Wallpaper
+        - Displays / multiple monitors
+        - Theming / colours
+        - kshelld (backend)
+        - Installer (install.py)
+        - Icons (droid-icons)
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: droid version
+      description: Output of `./install.py version`
+      placeholder: droid 1.0.0 (Cupcake)
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Plasma and Quickshell versions
+      description: Output of `plasmashell --version; qs --version`
+    validations:
+      required: true
+  - type: input
+    id: screens
+    attributes:
+      label: Displays
+      description: Number of displays, their resolutions, scale and orientation (`kscreen-doctor -o` helps).
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: KShell's log, from `qs log $(ls -t /run/user/$UID/quickshell/by-id/*/log.qslog | head -1)`. Warnings and errors are enough.
+      render: text
