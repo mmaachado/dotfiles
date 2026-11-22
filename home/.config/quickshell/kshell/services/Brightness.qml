@@ -40,13 +40,12 @@ Singleton {
     }
     readonly property string icon: iconFor(average)
 
-    // A short name for a monitor: PowerDevil's label without the vendor's
-    // model-number noise is often just the brand ("BenQ GW2480" → "BenQ").
+    // A short name for a monitor, for the OSD: the first word of
+    // PowerDevil's label ("BenQ GW2480" → "BenQ", "G270Q180").
     function shortLabel(d: var): string {
         if (d.internal)
             return "Built-in";
-        const label = (d.label || d.name).trim();
-        return label.length > 12 ? label.split(/\s+/)[0] : label;
+        return (d.label || d.name).trim().split(/\s+/)[0];
     }
 
     Process {
