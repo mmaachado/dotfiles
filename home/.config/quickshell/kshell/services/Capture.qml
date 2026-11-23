@@ -164,6 +164,7 @@ Singleton {
     // qs ipc call capture shot region
     IpcHandler {
         target: "capture"
+        function toggle(): void { Visibilities.toggle("capture", ""); }
         function shot(mode: string): void { root.shot(mode); }
         function record(mode: string): void { root.record(mode); }
         function stop(): void { root.stop(); }

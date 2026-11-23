@@ -106,7 +106,7 @@ Scope {
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.namespace: "kshell"
         WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.keyboardFocus: root.drawerOpen && (Visibilities.launcher || Visibilities.session || Visibilities.wallpapers || Visibilities.themes || Visibilities.clipboard)
+        WlrLayershell.keyboardFocus: root.drawerOpen && (Visibilities.launcher || Visibilities.session || Visibilities.wallpapers || Visibilities.themes || Visibilities.clipboard || Visibilities.capture)
             ? WlrKeyboardFocus.Exclusive : root.drawerOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
         mask: root.drawerOpen ? fullRegion : idleRegion
@@ -141,6 +141,11 @@ Scope {
             }
             Region {
                 item: wallpaperDrawer.body
+                topLeftRadius: Appearance.sizes.rounding
+                topRightRadius: Appearance.sizes.rounding
+            }
+            Region {
+                item: captureDrawer.body
                 topLeftRadius: Appearance.sizes.rounding
                 topRightRadius: Appearance.sizes.rounding
             }
@@ -288,6 +293,20 @@ Scope {
                 WallpaperPicker {
                     maxWidth: root.drawerRoom
                     open: Visibilities.wallpapers && root.here
+                }
+            }
+
+            Drawer {
+                id: captureDrawer
+                edge: "bottom"
+                open: Visibilities.capture && root.here
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: root.insetBottom
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.horizontalCenterOffset: root.centerOffset
+
+                CaptureBar {
+                    open: Visibilities.capture && root.here
                 }
             }
 
