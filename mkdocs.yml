@@ -75,6 +75,7 @@ nav:
       - Clipboard: user/clipboard.md
       - Phone mirroring: user/phone.md
       - AI usage: user/ai-usage.md
+      - Context menus: user/context-menus.md
       - Keyboard shortcuts: user/keybindings.md
       - Troubleshooting: user/troubleshooting.md
   - Developer guide:

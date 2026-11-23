@@ -5,12 +5,16 @@ import qs.services
 
 // Pinned apps + open windows on the current desktop (replaces Plasma's dock).
 // Left click: launch / focus / minimise / cycle windows. Middle click: new
-// instance. Right click: pin or unpin.
+// instance. Right click: a menu to open a new window, pin or unpin, and close.
 Pill {
     id: root
 
     spacing: 2
     visible: Dock.groups.length > 0
+
+    ContextMenu {
+        id: menu
+    }
 
     Repeater {
         model: Dock.groups
@@ -38,6 +42,23 @@ Pill {
 
             width: 38
             height: 38
+
+            function showMenu(): void {
+                const g = task.modelData;
+                const ws = g.windows;
+                const items = [
+                    { text: Dock.entry(g.id)?.name ?? g.id, enabled: false },
+                    { separator: true },
+                    { text: "New Window", action: () => Dock.launch(g) },
+                    { text: Dock.isPinned(g.id) ? "Unpin from Bar" : "Pin to Bar", action: () => Dock.togglePin(g.id) }
+                ];
+                if (ws.length > 0)
+                    items.push({ separator: true },
+                        { text: ws.length > 1 ? `Close ${ws.length} Windows` : "Close Window",
+                          action: () => ws.forEach(w => Bridge.close(w.id)) });
+                menu.items = items;
+                menu.popupFrom(task);
+            }
 
             // Indicator on the screen-edge side: long bar = focused, dots =
             // number of windows.
@@ -107,15 +128,15 @@ Pill {
                     if (mouse.button === Qt.MiddleButton)
                         Dock.launch(task.modelData);
                     else if (mouse.button === Qt.RightButton)
-                        Dock.togglePin(task.modelData.id);
+                        task.showMenu();
                     else
                         Dock.activate(task.modelData);
                 }
             }
 
             Tooltip {
-                text: Dock.name(task.modelData) + (task.modelData.pinned ? "  ·  right-click to unpin" : "  ·  right-click to pin")
-                shown: tip.shown
+                text: Dock.name(task.modelData)
+                shown: tip.shown && !menu.visible
             }
 
             HoverDelay {

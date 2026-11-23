@@ -15,6 +15,11 @@ Pill {
 
     visible: shown.length > 0
 
+    // The app's menu, drawn by KShell (D-Bus menu) rather than by the app.
+    ContextMenu {
+        id: menu
+    }
+
     Repeater {
         model: root.shown
 
@@ -49,12 +54,8 @@ Pill {
                         item.secondaryActivate();
                     } else if (mouse.button === Qt.RightButton || item.onlyMenu) {
                         if (item.hasMenu) {
-                            // Next to the icon, on the side away from the screen edge.
-                            const edge = Appearance.barPosition;
-                            const p = entry.mapToItem(null,
-                                edge === "left" ? entry.width + 14 : edge === "right" ? -254 : 0,
-                                edge === "top" ? entry.height + 14 : edge === "bottom" ? -14 : 0);
-                            item.display(QsWindow.window, p.x, p.y);
+                            menu.menu = item.menu;
+                            menu.popupFrom(entry);
                         }
                     } else {
                         item.activate();
@@ -65,7 +66,7 @@ Pill {
 
             Tooltip {
                 text: entry.modelData.tooltipTitle || entry.modelData.title
-                shown: tip.shown
+                shown: tip.shown && !menu.visible
             }
 
             HoverDelay {
