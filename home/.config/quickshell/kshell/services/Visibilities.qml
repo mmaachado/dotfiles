@@ -99,7 +99,7 @@ Singleton {
         function close(): void { Settings.open = false; }
         // `kshell ipc settings page dock`
         function page(name: string): void {
-            const i = ["appearance", "notch", "tray", "dock", "wallpaper", "displays", "about"].indexOf(name.toLowerCase());
+            const i = ["appearance", "notch", "tray", "dock", "wallpaper", "clipboard", "displays", "about"].indexOf(name.toLowerCase());
             if (i >= 0)
                 Settings.page = i;
             Settings.open = true;

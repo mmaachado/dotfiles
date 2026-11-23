@@ -23,6 +23,7 @@ FloatingWindow {
         { name: "Tray", icon: "preferences-desktop-notification-symbolic" },
         { name: "Dock", icon: "view-pin-symbolic" },
         { name: "Wallpaper", icon: "preferences-desktop-wallpaper-symbolic" },
+        { name: "Clipboard", icon: "edit-paste-symbolic" },
         { name: "Displays", icon: "video-display-symbolic" },
         { name: "About", icon: "help-about-symbolic" },
     ]
@@ -203,7 +204,7 @@ FloatingWindow {
             }
 
             Loader {
-                sourceComponent: [appearancePage, notchPage, trayPage, dockPage, wallpaperPage, displaysPage, aboutPage][Settings.page]
+                sourceComponent: [appearancePage, notchPage, trayPage, dockPage, wallpaperPage, clipboardPage, displaysPage, aboutPage][Settings.page]
             }
         }
     }
@@ -725,6 +726,41 @@ FloatingWindow {
             Hint {
                 visible: Dock.pinned.length === 0
                 text: "Nothing is pinned."
+            }
+        }
+    }
+
+    Component {
+        id: clipboardPage
+
+        Column {
+            width: content.width
+            spacing: 10
+
+            SettingRow {
+                icon: "smartphone-symbolic"
+                label: "Sync with phone"
+                description: KdeConnect.available
+                    ? `Copies on ${KdeConnect.devices.map(d => d.name).join(", ")} reach this desktop's clipboard history, and the other way round.`
+                    : "Pair a phone in KDE Connect, and what you copy on either side reaches the other."
+                StyledSwitch {
+                    checked: Settings.options.clipboardPhoneSync
+                    onToggled: Settings.options.clipboardPhoneSync = !checked
+                }
+            }
+
+            SettingRow {
+                icon: "edit-clear-history-symbolic"
+                label: "Clear history"
+                description: `${Clipboard.history.length} copies, ${Clipboard.history.filter(e => e.pinned).length} pinned. Pinned copies are kept.`
+                PillButton {
+                    label: "Clear"
+                    onClicked: Clipboard.clear()
+                }
+            }
+
+            Hint {
+                text: "Meta+V opens the clipboard. Text and images are kept (up to 200 copies, 30 images); copies from password managers never are."
             }
         }
     }

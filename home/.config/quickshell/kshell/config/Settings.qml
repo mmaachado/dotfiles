@@ -91,6 +91,9 @@ Singleton {
             property int screenshotDelay: 0
             property bool screenshotPointer: false
 
+            // Keep the clipboard in sync with phones paired in KDE Connect.
+            property bool clipboardPhoneSync: true
+
             // Draw KShell's own OSD (volume, brightness, ...) instead of Plasma's.
             property bool osd: true
 
