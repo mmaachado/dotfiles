@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=droid Phone
+GenericName=Phone Mirroring
+Comment=Mirror and control your Android phone, and send it files
+Exec=droid-phone
+Icon=smartphone
+Terminal=false
+Categories=Utility;
+Keywords=android;scrcpy;adb;mirror;phone;
