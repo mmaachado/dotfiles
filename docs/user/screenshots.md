@@ -5,8 +5,11 @@ Screenshots work like on a Mac, with Spectacle doing the capturing underneath.
 | Keys | Does |
 | --- | --- |
 | ++meta+shift+3++ | Screenshot of everything (all displays) |
-| ++meta+shift+4++ | Screenshot of a region: drag to select it |
+| ++print++ or ++meta+shift+4++ | Screenshot of a region: drag to select it |
 | ++meta+shift+5++ | The capture toolbar |
+
+Print used to open Spectacle; with KShell enabled, Spectacle keeps
+++meta+shift+s++. `./install.py kshell disable` gives Print back to it.
 
 ## The capture toolbar
 

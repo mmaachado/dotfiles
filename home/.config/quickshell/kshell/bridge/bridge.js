@@ -100,9 +100,11 @@ registerShortcut("KShell Wallpapers", "KShell: Toggle wallpaper picker", "Meta+W
 registerShortcut("KShell Themes", "KShell: Toggle theme picker", "Meta+Shift+T", ipc("themes toggle"));
 registerShortcut("KShell Clipboard", "KShell: Toggle clipboard history", "Meta+V", ipc("clipboard toggle"));
 // macOS's screenshot keys: everything, a region, the capture toolbar.
-registerShortcut("KShell Screenshot", "KShell: Screenshot of everything", "Meta+Shift+3", ipc("capture full"));
-registerShortcut("KShell Screenshot Region", "KShell: Screenshot of a region", "Meta+Shift+4", ipc("capture region"));
-registerShortcut("KShell Capture Toolbar", "KShell: Toggle capture toolbar", "Meta+Shift+5", ipc("capture toggle"));
+// `kshelld shortcuts kshell` adds the other spellings (Meta+Shift+3, ...)
+// and moves Print from Spectacle to the region screenshot.
+registerShortcut("KShell Screenshot", "KShell: Screenshot of everything", "Meta+#", ipc("capture full"));
+registerShortcut("KShell Screenshot Region", "KShell: Screenshot of a region", "Print", ipc("capture region"));
+registerShortcut("KShell Capture Toolbar", "KShell: Toggle capture toolbar", "Meta+%", ipc("capture toggle"));
 registerShortcut("KShell Settings", "KShell: Toggle settings", "", ipc("settings toggle"));
 registerShortcut("KShell Session", "KShell: Toggle session menu", "", ipc("session toggle"));
 

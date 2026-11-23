@@ -176,7 +176,7 @@ Column {
 
     StyledText {
         anchors.horizontalCenter: parent.horizontalCenter
-        text: `Saved to ${Capture.dir.replace(Quickshell.env("HOME"), "~")} and copied   ·   Meta+Shift+3 everything, Meta+Shift+4 region`
+        text: `Saved to ${Capture.dir.replace(Quickshell.env("HOME"), "~")} and copied   ·   Meta+Shift+3 everything, Print or Meta+Shift+4 region`
         color: Appearance.colors.textFaint
         font.pointSize: Appearance.font.small
     }

@@ -7,7 +7,7 @@
 | ++meta+v++ | Clipboard history |
 | ++meta+shift+t++ | Theme picker |
 | ++meta+shift+3++ | Screenshot of everything |
-| ++meta+shift+4++ | Screenshot of a region |
+| ++print++ / ++meta+shift+4++ | Screenshot of a region |
 | ++meta+shift+5++ | Capture toolbar (screenshots and recordings) |
 | ++meta+alt+d++ | Dashboard (or hover the notch) |
 | ++meta+o++ | KWin Overview (moved from ++meta+w++) |
