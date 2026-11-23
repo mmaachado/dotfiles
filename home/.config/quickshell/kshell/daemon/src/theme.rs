@@ -511,6 +511,11 @@ async fn apply(t: &Theme) -> Result<()> {
     let name = scheme_name(t);
     std::fs::write(schemes.join(format!("{name}.colors")), colour_scheme(t))?;
     exec(&["plasma-apply-colorscheme", &name]);
+    // GTK's menus, which the colour scheme doesn't shape
+    menus::install_gtk(
+        &home.join(".config"),
+        &menus::Colours::new(t.palette(), t.dark),
+    )?;
 
     // 2. window decoration: MacVentura aurorae if installed, else Breeze
     let aurorae = [
@@ -653,6 +658,9 @@ pub async fn run(args: &[String]) -> Result<()> {
                 dir.join(format!("{kv}.svg")),
                 menus::kvantum_svg(&read("svg"), &colours),
             )?;
+            for (name, css) in menus::gtk_files(&colours) {
+                std::fs::write(dir.join(name), css)?;
+            }
             Ok(())
         }
         [cmd] if cmd == "current" => {
