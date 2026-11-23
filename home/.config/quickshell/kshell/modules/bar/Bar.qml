@@ -87,6 +87,9 @@ Item {
                 anchors.horizontalCenter: parent.horizontalCenter
                 spacing: 10
 
+                RecordIndicator {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
                 PowerButton {
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
@@ -150,6 +153,9 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 10
 
+                RecordIndicator {
+                    anchors.verticalCenter: parent.verticalCenter
+                }
                 Tray {
                     anchors.verticalCenter: parent.verticalCenter
                 }

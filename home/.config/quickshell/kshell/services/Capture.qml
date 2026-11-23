@@ -81,7 +81,8 @@ Singleton {
 
     // ── Recording ────────────────────────────────────────────────────
 
-    readonly property var recordFlags: ({ screen: "s", region: "r", window: "w" })
+    // Spectacle 6.8 lists s/r/w in --help but only accepts the full names.
+    readonly property var recordFlags: ({ screen: "screen", region: "region", window: "window" })
 
     function record(mode: string): void {
         if (root.recording || root.busy || !(mode in root.recordFlags))
@@ -106,14 +107,27 @@ Singleton {
         if (!root.recording)
             return;
         Quickshell.execDetached(["qdbus6", "org.kde.Spectacle", "/", "org.kde.Spectacle.RecordScreen", "0"]);
+        // If Spectacle never reports back, don't keep showing a recording.
+        giveUp.restart();
     }
 
+    // Spectacle may hand the recording to its D-Bus-activated instance and
+    // exit at once, so the recording ends when Spectacle says it's saved
+    // (or failed), not when this process exits.
     Process {
         id: recorder
-        onExited: {
-            root.recording = false;
-            stopWatching.restart();
-        }
+    }
+
+    function finished(): void {
+        root.recording = false;
+        giveUp.stop();
+        stopWatching.restart();
+    }
+
+    Timer {
+        id: giveUp
+        interval: 10000
+        onTriggered: root.finished()
     }
 
     // Spectacle announces the saved video on D-Bus.
@@ -131,10 +145,13 @@ Singleton {
                 const s = line.match(/^\s*string "(.*)"$/);
                 if (!s)
                     return;
-                if (watcher.member === "RecordingTaken")
+                if (watcher.member === "RecordingTaken") {
+                    root.finished();
                     root.captured(s[1], true);
-                else if (watcher.member === "RecordingFailed")
+                } else if (watcher.member === "RecordingFailed") {
+                    root.finished();
                     root.failed(s[1]);
+                }
                 watcher.member = "";
             }
         }
