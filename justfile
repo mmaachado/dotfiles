@@ -97,7 +97,9 @@ docs-serve:
 apps-install:
     cd apps && ./gradlew --console=plain -q installDist
     mkdir -p ~/.local/share/droid/apps ~/.local/bin ~/.local/share/applications
-    rm -rf ~/.local/share/droid/apps/markup
-    cp -r apps/markup/build/install/droid-markup ~/.local/share/droid/apps/markup
-    ln -sf ~/.local/share/droid/apps/markup/bin/droid-markup ~/.local/bin/droid-markup
-    cp apps/markup/droid-markup.desktop ~/.local/share/applications/
+    for app in markup phone; do \
+        rm -rf ~/.local/share/droid/apps/$app; \
+        cp -r apps/$app/build/install/droid-$app ~/.local/share/droid/apps/$app; \
+        ln -sf ~/.local/share/droid/apps/$app/bin/droid-$app ~/.local/bin/droid-$app; \
+        cp apps/$app/droid-$app.desktop ~/.local/share/applications/; \
+    done

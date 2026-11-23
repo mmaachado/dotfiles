@@ -73,6 +73,7 @@ nav:
       - Settings: user/settings.md
       - Screenshots: user/screenshots.md
       - Clipboard: user/clipboard.md
+      - Phone mirroring: user/phone.md
       - Keyboard shortcuts: user/keybindings.md
       - Troubleshooting: user/troubleshooting.md
   - Developer guide:

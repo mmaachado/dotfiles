@@ -22,4 +22,4 @@ dependencyResolutionManagement {
     }
 }
 
-include(":common", ":markup")
+include(":common", ":markup", ":phone")

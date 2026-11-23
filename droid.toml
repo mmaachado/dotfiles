@@ -64,6 +64,11 @@ repo = ["just", "kotlin", "gradle", "jdk21-openjdk", "shellcheck", "ruff", "mkdo
 # Only in the AUR as a package; PyPI ships the same binary.
 uv = ["lefthook"]
 
+[packages.phone]
+description = "Phone mirroring (droid Phone): scrcpy and adb"
+optional = true
+repo = ["scrcpy", "android-tools"]
+
 [packages.optional]
 description = "Nice to have: zsh plugins, CLI tools and Bluetooth"
 optional = true

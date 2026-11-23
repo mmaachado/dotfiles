@@ -10,8 +10,9 @@
   annotations.
 - **Clipboard like Windows 11** *(in review)*: images in the history,
   pinned items, sync with your phone through KDE Connect.
-- **Phone mirroring like macOS**: **droid Phone** (Kotlin), an Android
-  front end for scrcpy with Wi-Fi pairing by QR code, audio and file drop.
+- **Phone mirroring like macOS** *(in review)*: **droid Phone** (Kotlin),
+  an Android front end for scrcpy with Wi-Fi pairing by QR code, audio and
+  file drop.
 - **AI usage**: [ai-usagebar](https://github.com/akitaonrails/ai-usagebar) as
   a ring beside the tray, with each provider's quota in a popup.
 
