@@ -10,7 +10,7 @@ Item {
     property string text: ""
     property string caption: ""
     property color color: value > 0.85 ? Appearance.colors.error : Appearance.colors.primary
-    readonly property real stroke: 5
+    property real stroke: 5
 
     implicitWidth: 56
     implicitHeight: 56 + (caption ? 18 : 0)

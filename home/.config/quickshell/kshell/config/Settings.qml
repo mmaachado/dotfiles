@@ -94,6 +94,9 @@ Singleton {
             // Keep the clipboard in sync with phones paired in KDE Connect.
             property bool clipboardPhoneSync: true
 
+            // AI plan usage beside the tray (ai-usagebar, when installed).
+            property bool aiUsage: true
+
             // Draw KShell's own OSD (volume, brightness, ...) instead of Plasma's.
             property bool osd: true
 
