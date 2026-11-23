@@ -76,3 +76,9 @@ hooks:
 # Show the next release from the commits since the last tag; `just release --apply` commits and tags it
 release *args:
     kotlin scripts/release.main.kts {{args}}
+
+# ── Kotlin apps ─────────────────────────────────────────────────────
+
+# Build and test the Kotlin apps in apps/
+apps:
+    cd apps && ./gradlew build
