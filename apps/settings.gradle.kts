@@ -22,4 +22,4 @@ dependencyResolutionManagement {
     }
 }
 
-include(":common")
+include(":common", ":markup")

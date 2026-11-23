@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=droid Markup
+GenericName=Screenshot Editor
+Comment=Annotate screenshots: pen, arrows, shapes, text, highlight, pixelate, crop
+Exec=droid-markup %f
+Icon=draw-brush
+Terminal=false
+MimeType=image/png;image/jpeg;
+Categories=Graphics;2DGraphics;
+NoDisplay=true

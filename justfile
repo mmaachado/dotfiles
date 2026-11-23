@@ -92,3 +92,12 @@ docs:
 # Serve the docs portal at http://127.0.0.1:8000 with live reload
 docs-serve:
     mkdocs serve
+
+# Install the Kotlin apps into ~/.local (launchers in ~/.local/bin)
+apps-install:
+    cd apps && ./gradlew --console=plain -q installDist
+    mkdir -p ~/.local/share/droid/apps ~/.local/bin ~/.local/share/applications
+    rm -rf ~/.local/share/droid/apps/markup
+    cp -r apps/markup/build/install/droid-markup ~/.local/share/droid/apps/markup
+    ln -sf ~/.local/share/droid/apps/markup/bin/droid-markup ~/.local/bin/droid-markup
+    cp apps/markup/droid-markup.desktop ~/.local/share/applications/
