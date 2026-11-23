@@ -85,6 +85,12 @@ Singleton {
             property string iconStyle: "rounded"
             property bool iconFilled: true
 
+            // Screenshots (services/Capture.qml): "" = ~/Pictures/Screenshots;
+            // timer in seconds; include the pointer.
+            property string screenshotDir: ""
+            property int screenshotDelay: 0
+            property bool screenshotPointer: false
+
             // Draw KShell's own OSD (volume, brightness, ...) instead of Plasma's.
             property bool osd: true
 

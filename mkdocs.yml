@@ -71,6 +71,7 @@ nav:
       - Install: user/install.md
       - First run: user/first-run.md
       - Settings: user/settings.md
+      - Screenshots: user/screenshots.md
       - Keyboard shortcuts: user/keybindings.md
       - Troubleshooting: user/troubleshooting.md
   - Developer guide:

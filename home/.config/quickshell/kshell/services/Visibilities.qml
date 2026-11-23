@@ -14,11 +14,12 @@ Singleton {
     property bool wallpapers
     property bool themes
     property bool clipboard
+    property bool capture
     property bool dnd
     // Name of the screen the drawers open on (empty = any)
     property string screen: ""
 
-    readonly property bool anyOpen: launcher || dashboard || session || wallpapers || themes || clipboard
+    readonly property bool anyOpen: launcher || dashboard || session || wallpapers || themes || clipboard || capture
 
     // The dashboard lives in the notch, so where the notch is kept to the
     // primary display it opens there.
@@ -52,6 +53,7 @@ Singleton {
         wallpapers = false;
         themes = false;
         clipboard = false;
+        capture = false;
     }
 
     Connections {

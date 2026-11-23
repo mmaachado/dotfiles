@@ -106,7 +106,7 @@ Scope {
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.namespace: "kshell"
         WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.keyboardFocus: root.drawerOpen && (Visibilities.launcher || Visibilities.session || Visibilities.wallpapers || Visibilities.themes || Visibilities.clipboard)
+        WlrLayershell.keyboardFocus: root.drawerOpen && (Visibilities.launcher || Visibilities.session || Visibilities.wallpapers || Visibilities.themes || Visibilities.clipboard || Visibilities.capture)
             ? WlrKeyboardFocus.Exclusive : root.drawerOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
         mask: root.drawerOpen ? fullRegion : idleRegion
@@ -141,6 +141,11 @@ Scope {
             }
             Region {
                 item: wallpaperDrawer.body
+                topLeftRadius: Appearance.sizes.rounding
+                topRightRadius: Appearance.sizes.rounding
+            }
+            Region {
+                item: captureDrawer.body
                 topLeftRadius: Appearance.sizes.rounding
                 topRightRadius: Appearance.sizes.rounding
             }
@@ -180,6 +185,7 @@ Scope {
             id: idleRegion
             item: root.showBar ? bar : null
             Region { item: popups }
+            Region { item: captureThumb.visible ? captureThumb : null }
             Region { item: root.showNotch ? island : null }
             Region { item: root.showNotch ? island.edgeItem : null }
         }
@@ -292,6 +298,20 @@ Scope {
             }
 
             Drawer {
+                id: captureDrawer
+                edge: "bottom"
+                open: Visibilities.capture && root.here
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: root.insetBottom
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.horizontalCenterOffset: root.centerOffset
+
+                CaptureBar {
+                    open: Visibilities.capture && root.here
+                }
+            }
+
+            Drawer {
                 id: clipboardDrawer
                 edge: "bottom"
                 open: Visibilities.clipboard && root.here
@@ -350,6 +370,16 @@ Scope {
                 anchors.verticalCenter: parent.verticalCenter
 
                 OsdView {}
+            }
+
+            // After a screenshot or recording, on the screen being used.
+            CaptureThumb {
+                id: captureThumb
+                active: Bridge.activeScreen === root.modelData.name || root.single
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.rightMargin: root.insetRight + 16
+                anchors.bottomMargin: root.insetBottom + 16
             }
 
             Popups {
