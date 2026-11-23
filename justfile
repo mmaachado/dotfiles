@@ -72,3 +72,7 @@ commit-check *args:
 # Install the git hooks (lefthook)
 hooks:
     lefthook install
+
+# Show the next release from the commits since the last tag; `just release --apply` commits and tags it
+release *args:
+    kotlin scripts/release.main.kts {{args}}
