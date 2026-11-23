@@ -7,7 +7,8 @@ import qs.services
 // Clipboard history (Meta+V), laid out like Windows 11's: cards for every
 // copy, text or image, with pinned ones on top. Type to search, ↑/↓ to
 // move, Enter or a click to copy back, Ctrl+P to pin, Delete to forget,
-// Esc to close. Each card has pin and delete buttons.
+// Esc to close. Each card has pin, send-to-phone (KDE Connect) and delete
+// buttons.
 Item {
     id: root
 
@@ -285,6 +286,20 @@ Item {
                         opacity: card.modelData.pinned || card.current ? 1 : 0
                         tooltip: card.modelData.pinned ? "Unpin" : "Pin"
                         onClicked: Clipboard.pin(card.modelData.id)
+                    }
+                    IconButton {
+                        // To every reachable phone paired in KDE Connect.
+                        visible: KdeConnect.available
+                        icon: "smartphone-symbolic"
+                        iconSize: 15
+                        opacity: card.current ? 1 : 0
+                        tooltip: "Send to phone"
+                        onClicked: {
+                            if (card.image)
+                                KdeConnect.shareFile(card.modelData.path);
+                            else
+                                KdeConnect.shareText(card.modelData.text);
+                        }
                     }
                     IconButton {
                         icon: "edit-delete-symbolic"
