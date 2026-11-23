@@ -53,6 +53,16 @@ object Adb {
         return run("-s", serial, "push", *paths.toTypedArray(), "/sdcard/Download/", timeoutSec = 600)
     }
 
+    /**
+     * The shell command that turns off Developer options and then USB
+     * debugging (the connection drops at that point, so it comes last).
+     * Banking apps refuse to run while either is on; turning them back on
+     * has to happen on the phone.
+     */
+    val lockdownCommand = "settings put global development_settings_enabled 0; settings put global adb_enabled 0"
+
+    fun lockdown(serial: String) = run("-s", serial, "shell", lockdownCommand, timeoutSec = 10)
+
     /** Battery level in percent, or null. */
     fun battery(serial: String): Int? =
         parseBattery(run("-s", serial, "shell", "dumpsys", "battery", timeoutSec = 5).output)

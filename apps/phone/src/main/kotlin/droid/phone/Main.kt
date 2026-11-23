@@ -239,7 +239,8 @@ fun DevicePane(device: Device, onStatus: (String) -> Unit) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             val mirroring = tick >= 0 && Mirror.isRunning(device.serial)
             Button(enabled = device.ready, onClick = {
-                if (mirroring) Mirror.stop(device.serial) else Mirror.start(device, options)?.let(onStatus)
+                if (mirroring) Mirror.stop(device.serial)
+                else Mirror.start(device, options) { msg -> if (msg.isNotEmpty()) onStatus(msg); tick++ }?.let(onStatus)
                 tick++
             }) { Text(if (mirroring) "Stop mirroring" else "Mirror") }
             OutlinedButton(enabled = device.ready, onClick = {
@@ -258,6 +259,10 @@ fun DevicePane(device: Device, onStatus: (String) -> Unit) {
         Option("Keep the phone awake", options.stayAwake) { options = options.copy(stayAwake = it) }
         Option("Turn the phone's screen off while mirroring", options.screenOff) { options = options.copy(screenOff = it) }
         Option("Mirror window always on top", options.onTop) { options = options.copy(onTop = it) }
+        Option(
+            "When I stop, turn off Developer options and USB debugging (banking apps refuse to run while they're on)",
+            options.lockdownOnStop,
+        ) { options = options.copy(lockdownOnStop = it) }
 
         Text(
             "Drop files here to send them to the phone's Download folder.",

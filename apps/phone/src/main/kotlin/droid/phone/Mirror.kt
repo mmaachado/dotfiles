@@ -9,6 +9,8 @@ data class MirrorOptions(
     val screenOff: Boolean = false,
     val onTop: Boolean = false,
     val maxSize: Int = 1920,
+    /** When mirroring ends, turn off Developer options and USB debugging. */
+    val lockdownOnStop: Boolean = true,
 )
 
 /** Mirroring windows: one scrcpy per phone. */
@@ -31,12 +33,31 @@ object Mirror {
 
     fun isRunning(serial: String) = running[serial]?.isAlive == true
 
-    fun start(device: Device, options: MirrorOptions): String? {
+    /**
+     * Start mirroring. [onEnded] runs when the mirror window closes, however
+     * that happens (Stop mirroring, closing the window, unplugging).
+     */
+    fun start(device: Device, options: MirrorOptions, onEnded: (String) -> Unit = {}): String? {
         if (isRunning(device.serial)) return null
         return runCatching {
-            running[device.serial] = ProcessBuilder(args(device, options)).inheritIO().start()
+            val p = ProcessBuilder(args(device, options)).inheritIO().start()
+            running[device.serial] = p
+            p.onExit().thenRun {
+                running.remove(device.serial, p)
+                onEnded(if (options.lockdownOnStop) lockdown(device) else "")
+            }
             null
         }.getOrElse { "scrcpy isn't installed: ./install.py packages -g phone" }
+    }
+
+    /** Turn off Developer options and USB debugging; a status line. */
+    fun lockdown(device: Device): String {
+        val r = Adb.lockdown(device.serial)
+        // adb usually reports an error here: the connection drops as
+        // debugging goes off, which is the point.
+        return if (r.ok || "closed" in r.output || "error" in r.output || r.output.isEmpty())
+            "Developer options and USB debugging are off on ${device.label}. Turn them back on on the phone to mirror again."
+        else "Couldn't turn off debugging: ${r.output.lines().lastOrNull() ?: ""}"
     }
 
     fun stop(serial: String) {

@@ -35,3 +35,15 @@ Quick Settings.
   phone's screen off while mirroring, window always on top.
 - **Send files**: drop files on droid Phone (or *Send files…*); they land in
   the phone's Download folder.
+
+## Banking apps
+
+Many banking apps refuse to run while Developer options or USB debugging is
+on, and mirroring needs both. droid Phone's option **When I stop, turn off
+Developer options and USB debugging** (on by default) switches both off as
+soon as mirroring ends, whether you press *Stop mirroring* or close the
+window, so your bank works again straight away.
+
+To mirror again, turn them back on on the phone (Android doesn't let a
+computer do that). Your computer stays authorised, so you won't be asked
+to allow it again, unless you tap *Revoke USB debugging authorizations*.

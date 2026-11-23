@@ -56,6 +56,13 @@ class AdbTest {
     }
 
     @Test
+    fun lockdownTurnsOffDeveloperOptionsBeforeDebugging() {
+        val c = Adb.lockdownCommand
+        assertTrue(c.indexOf("development_settings_enabled 0") < c.indexOf("adb_enabled 0"))
+        assertTrue(MirrorOptions().lockdownOnStop)
+    }
+
+    @Test
     fun scrcpyArguments() {
         val d = Device("R58", "device", "Pixel 8", false)
         val args = Mirror.args(d, MirrorOptions(audio = false, screenOff = true))
