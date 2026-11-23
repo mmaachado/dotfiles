@@ -558,6 +558,18 @@ FloatingWindow {
             width: content.width
             spacing: 10
 
+            SettingRow {
+                icon: "chronometer"
+                label: "AI usage"
+                description: AiUsage.installed
+                    ? "A ring beside the tray with your most used AI plan limit; click it for every provider (ai-usagebar)."
+                    : "Install ai-usagebar to see your AI plans' usage beside the tray: ./install.py packages -g ai"
+                StyledSwitch {
+                    checked: Settings.options.aiUsage
+                    onToggled: Settings.options.aiUsage = !checked
+                }
+            }
+
             Heading { text: "Status icons" }
             Hint {
                 text: "Shown at the bottom of the bar. Click them to open the dashboard."

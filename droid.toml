@@ -69,6 +69,12 @@ description = "Phone mirroring (droid Phone): scrcpy and adb"
 optional = true
 repo = ["scrcpy", "android-tools"]
 
+[packages.ai]
+description = "AI plan usage beside the tray (ai-usagebar: Claude, Codex, Copilot, ...)"
+optional = true
+# Not in the Arch repos; built from crates.io into ~/.local (no AUR).
+cargo = ["ai-usagebar"]
+
 [packages.optional]
 description = "Nice to have: zsh plugins, CLI tools and Bluetooth"
 optional = true

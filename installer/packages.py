@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+from pathlib import Path
 
 from .system import run
 
@@ -28,6 +29,11 @@ def missing_uv(tools: list[str] | tuple[str, ...]) -> list[str]:
     return [t for t in tools if shutil.which(t) is None]
 
 
+def missing_cargo(crates: list[str] | tuple[str, ...]) -> list[str]:
+    """Crates whose command isn't on PATH (the crate name is the command)."""
+    return [c for c in crates if shutil.which(c) is None]
+
+
 def aur_helper() -> str | None:
     for helper in ("paru", "yay"):
         if shutil.which(helper):
@@ -35,9 +41,17 @@ def aur_helper() -> str | None:
     return None
 
 
-def install(repo: list[str], aur: list[str], dry_run: bool, uv: list[str] | None = None) -> bool:
+def install(repo: list[str], aur: list[str], dry_run: bool, uv: list[str] | None = None,
+            cargo: list[str] | None = None) -> bool:
     """Install missing packages. Returns False if something could not be installed."""
     ok = True
+    for crate in cargo or []:
+        if shutil.which("cargo") is None:
+            print(f"cargo isn't installed (sudo pacman -S rust); skipping {crate}")
+            ok = False
+            continue
+        root = str(Path.home() / ".local")
+        ok &= run(["cargo", "install", "--locked", "--root", root, crate], dry_run) == 0
     for tool in uv or []:
         if shutil.which("uv") is None:
             print(f"uv isn't installed; skipping {tool}")

@@ -34,6 +34,8 @@ class Group:
     aur: tuple[str, ...]
     # Command-line tools installed with `uv tool install` (no sudo, no AUR).
     uv: tuple[str, ...]
+    # Crates installed with `cargo install --locked --root ~/.local` (same).
+    cargo: tuple[str, ...]
     optional: bool
 
 
@@ -94,6 +96,7 @@ def load(path: Path = MANIFEST) -> Manifest:
             repo=tuple(g.get("repo", [])),
             aur=tuple(g.get("aur", [])),
             uv=tuple(g.get("uv", [])),
+            cargo=tuple(g.get("cargo", [])),
             optional=bool(g.get("optional", False)),
         )
         for name, g in data.get("packages", {}).items()

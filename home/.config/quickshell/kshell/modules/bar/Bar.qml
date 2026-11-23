@@ -100,6 +100,9 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
                     screenName: root.screenName
                 }
+                AiUsageIndicator {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
                 Tray {
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
@@ -154,6 +157,9 @@ Item {
                 spacing: 10
 
                 RecordIndicator {
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                AiUsageIndicator {
                     anchors.verticalCenter: parent.verticalCenter
                 }
                 Tray {
