@@ -82,3 +82,13 @@ release *args:
 # Build and test the Kotlin apps in apps/
 apps:
     cd apps && ./gradlew build
+
+# ── Docs ────────────────────────────────────────────────────────────
+
+# Build the docs portal into site/ (fails on broken links)
+docs:
+    mkdocs build --strict
+
+# Serve the docs portal at http://127.0.0.1:8000 with live reload
+docs-serve:
+    mkdocs serve
