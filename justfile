@@ -68,3 +68,7 @@ log:
 # Check a commit message file, or `--range A..B` (Conventional Commits)
 commit-check *args:
     kotlin scripts/commit-msg.main.kts {{args}}
+
+# Install the git hooks (lefthook)
+hooks:
+    lefthook install

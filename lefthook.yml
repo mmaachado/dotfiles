@@ -1,0 +1,43 @@
+# Git hooks for droid: `just hooks` installs them. They run the parts of
+# `just lint` that the staged files touch; CI runs everything.
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: rustfmt
+      glob: "home/.config/quickshell/kshell/daemon/**/*.rs"
+      run: cd home/.config/quickshell/kshell/daemon && cargo fmt --check
+
+    - name: ruff
+      glob: "*.py"
+      run: ruff check {staged_files}
+
+    - name: shellcheck
+      glob:
+        - "install.sh"
+        - "home/.local/bin/kshell"
+      run: shellcheck {staged_files}
+
+    - name: zsh
+      glob:
+        - "home/.local/bin/pacman_updates"
+        - "home/.zshrc"
+        - "home/.zprofile"
+      run: for f in {staged_files}; do zsh -n "$f"; done
+
+    # Recompiles the shaders; a stale .qsb shows up as an unstaged change.
+    - name: shaders
+      glob: "home/.config/quickshell/kshell/shaders/*.frag"
+      run: just shaders-check
+
+    - name: config
+      glob:
+        - "droid.toml"
+        - "home/.config/quickshell/kshell/daemon/Cargo.toml"
+        - "home/.config/quickshell/kshell/config/*.json"
+      run: just lint-config
+
+commit-msg:
+  jobs:
+    - name: conventional commits
+      run: kotlin scripts/commit-msg.main.kts {1}
