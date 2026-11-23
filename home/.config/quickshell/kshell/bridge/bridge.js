@@ -99,6 +99,9 @@ registerShortcut("KShell Dashboard", "KShell: Toggle dashboard", "Meta+Alt+D", i
 registerShortcut("KShell Wallpapers", "KShell: Toggle wallpaper picker", "Meta+W", ipc("wallpapers toggle"));
 registerShortcut("KShell Themes", "KShell: Toggle theme picker", "Meta+Shift+T", ipc("themes toggle"));
 registerShortcut("KShell Clipboard", "KShell: Toggle clipboard history", "Meta+V", ipc("clipboard toggle"));
+// macOS's screenshot keys: everything, a region.
+registerShortcut("KShell Screenshot", "KShell: Screenshot of everything", "Meta+Shift+3", ipc("capture full"));
+registerShortcut("KShell Screenshot Region", "KShell: Screenshot of a region", "Meta+Shift+4", ipc("capture region"));
 registerShortcut("KShell Settings", "KShell: Toggle settings", "", ipc("settings toggle"));
 registerShortcut("KShell Session", "KShell: Toggle session menu", "", ipc("session toggle"));
 
