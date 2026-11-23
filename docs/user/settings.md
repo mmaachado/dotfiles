@@ -36,6 +36,11 @@ an app in the bar or the launcher.
 - **Fill** for each display: scaled and cropped, fit, stretch, centered or tiled. A portrait monitor usually wants *Fit*, with **Blur the empty space** around it.
 - **Transition**: animated wallpaper changes, the effect (liquid, fade, wipe, circle, pixelate, dissolve, random) and its length.
 
+## Clipboard
+
+**Sync with phone** (through KDE Connect) and clearing the history. See
+[Clipboard](clipboard.md).
+
 ## Displays
 
 - **Arrangement**: drag the displays; they snap to each other's edges.

@@ -72,6 +72,7 @@ nav:
       - First run: user/first-run.md
       - Settings: user/settings.md
       - Screenshots: user/screenshots.md
+      - Clipboard: user/clipboard.md
       - Keyboard shortcuts: user/keybindings.md
       - Troubleshooting: user/troubleshooting.md
   - Developer guide:
