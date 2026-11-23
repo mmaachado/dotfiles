@@ -458,6 +458,17 @@ Item {
                 }
             }
             Tile {
+                // Opens droid Phone (mirroring, pairing, sending files).
+                icon: "smartphone-symbolic"
+                label: "Phone"
+                sub: Phone.connected ? Phone.phones.join(", ") : "Not connected"
+                on: Phone.connected
+                onToggled: {
+                    Phone.open();
+                    Visibilities.closeAll();
+                }
+            }
+            Tile {
                 icon: Audio.micMuted ? "microphone-sensitivity-muted-symbolic" : "microphone-sensitivity-high-symbolic"
                 label: "Microphone"
                 sub: !Audio.hasMic ? "None found" : Audio.micMuted ? "Muted" : "On"
