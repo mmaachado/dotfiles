@@ -56,7 +56,7 @@ def check() -> None:
 
     t = table("Packages")
     for g in m.groups.values():
-        miss = P.missing(g.repo + g.aur)
+        miss = P.missing(g.repo + g.aur) + P.missing_uv(g.uv)
         label = g.name + (" (optional)" if g.optional and g.name != "optional" else "")
         t.add_row(mark(not miss, warn_only=g.optional), label,
                   "all installed" if not miss else "missing: " + ", ".join(miss))
@@ -103,10 +103,11 @@ def packages(group: groups = None, optional: with_optional = False, dry_run: dry
         raise typer.Exit(2)
     repo = [p for g in groups for p in P.missing(g.repo)]
     aur = [p for g in groups for p in P.missing(g.aur)]
-    if not repo and not aur:
+    uv = [t for g in groups for t in P.missing_uv(g.uv)]
+    if not repo and not aur and not uv:
         console.print(f"{OK} Packages already installed ({', '.join(g.name for g in groups)}).")
         return
-    if not P.install(repo, aur, dry_run):
+    if not P.install(repo, aur, dry_run, uv):
         raise typer.Exit(1)
 
 

@@ -6,3 +6,10 @@ __pycache__/
 # config/Settings.qml and config/pinned.default.json.
 home/.config/quickshell/kshell/config/settings.json
 home/.config/quickshell/kshell/config/pinned.json
+
+# Kotlin apps (apps/): Gradle and Kotlin build output.
+apps/.gradle/
+apps/.kotlin/
+apps/**/build/
+# Docs portal output (mkdocs build).
+site/

@@ -1,0 +1,23 @@
+/* droid's colours: Android green on Material's light and dark schemes. */
+:root,
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: #1f6b3a;
+  --md-primary-fg-color--light: #3ddc84;
+  --md-primary-fg-color--dark: #0f4d27;
+  --md-accent-fg-color: #2e8b4e;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #0f1416;
+  --md-primary-fg-color--light: #3ddc84;
+  --md-accent-fg-color: #3ddc84;
+  --md-typeset-a-color: #7ee2a8;
+}
+
+.droid-hero {
+  text-align: center;
+}
+
+.droid-hero img {
+  width: 160px;
+}

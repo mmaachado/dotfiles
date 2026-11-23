@@ -17,72 +17,52 @@ env:
   SHADERS: home/.config/quickshell/kshell/shaders
 
 jobs:
+  # The checks are `just` recipes (see the justfile), so CI and
+  # `just lint` locally run exactly the same commands.
   rust:
     name: kshelld (fmt, clippy, test)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ${{ env.DAEMON }}
     steps:
       - uses: actions/checkout@v7
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: just
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: ${{ env.DAEMON }}
-      - run: cargo fmt --check
-      - run: cargo clippy --locked --all-targets -- -D warnings
-      - run: cargo test --locked
+      - run: just lint-rust
+      - run: just test
 
   python:
-    name: Installer (ruff, manifest)
+    name: Installer and manifest (ruff, droid.toml, config)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: just
       - uses: astral-sh/ruff-action@v3
         with:
           version: "0.17.3"
-          src: installer install.py
+          src: installer install.py scripts
       - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
-      - name: droid.toml is valid and matches kshelld's version
-        run: |
-          python - <<'PY'
-          import tomllib
-          from pathlib import Path
-
-          droid = tomllib.loads(Path("droid.toml").read_text())
-          release = droid["release"]
-          for key in ("name", "version", "codename"):
-              assert release.get(key), f"[release] is missing {key}"
-          cargo = tomllib.loads(Path("${{ env.DAEMON }}/Cargo.toml").read_text())
-          assert cargo["package"]["version"] == release["version"], (
-              f"kshelld is {cargo['package']['version']}, droid.toml says {release['version']}"
-          )
-          for rel in droid["links"]["paths"]:
-              assert (Path("home") / rel).exists(), f"linked path missing: home/{rel}"
-          print(f"{release['name']} {release['version']} ({release['codename']})")
-          PY
-      - name: Config JSON parses
-        run: |
-          for f in home/.config/quickshell/kshell/config/*.json; do
-            python -m json.tool "$f" > /dev/null || { echo "::error file=$f::invalid JSON"; exit 1; }
-          done
+      - run: just lint-config
 
   shell:
     name: Scripts (shellcheck, zsh -n)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - run: shellcheck install.sh home/.local/bin/kshell
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: just
       - run: sudo apt-get install -y --no-install-recommends zsh
-      - name: zsh syntax
-        run: |
-          zsh -n home/.local/bin/pacman_updates
-          zsh -n home/.zshrc
-          zsh -n home/.zprofile
+      - run: just lint-shell
 
   shaders:
     name: Shaders compile
@@ -102,9 +82,45 @@ jobs:
       - name: Committed .qsb files are up to date
         run: |
           if ! git diff --quiet -- "$SHADERS"; then
-            echo "::warning::Some .qsb files differ from a fresh compile. Recompile them with /usr/lib/qt6/bin/qsb --qt6 -o X.frag.qsb X.frag"
+            echo "::warning::Some .qsb files differ from a fresh compile. Recompile them with just shaders"
             git diff --stat -- "$SHADERS"
           fi
+
+  apps:
+    name: Kotlin apps (gradle build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v5
+      - run: ./gradlew build
+        working-directory: apps
+
+  commits:
+    name: Commit messages (Conventional Commits)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      KOTLIN: "2.4.21"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install the Kotlin compiler (checksum-verified)
+        run: |
+          base=https://github.com/JetBrains/kotlin/releases/download/v$KOTLIN
+          curl -sfLO "$base/kotlin-compiler-$KOTLIN.zip"
+          echo "$(curl -sfL "$base/kotlin-compiler-$KOTLIN.zip.sha256" | cut -d' ' -f1)  kotlin-compiler-$KOTLIN.zip" | sha256sum -c -
+          unzip -q "kotlin-compiler-$KOTLIN.zip" -d "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/kotlinc/bin" >> "$GITHUB_PATH"
+      - run: kotlin scripts/commit-msg.main.kts --range "origin/${{ github.base_ref }}..HEAD"
 
   # QML isn't linted: qmllint can't resolve Quickshell's qs.* modules
   # without a running Quickshell, so it would only report false errors.

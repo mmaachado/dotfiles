@@ -57,6 +57,13 @@ repo = [
     "kvantum",
 ]
 
+[packages.dev]
+description = "For working on droid: just, lefthook, Kotlin, Gradle, linters and the docs"
+optional = true
+repo = ["just", "kotlin", "gradle", "jdk21-openjdk", "shellcheck", "ruff", "mkdocs-material"]
+# Only in the AUR as a package; PyPI ships the same binary.
+uv = ["lefthook"]
+
 [packages.optional]
 description = "Nice to have: zsh plugins, CLI tools and Bluetooth"
 optional = true

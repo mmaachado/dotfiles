@@ -32,6 +32,8 @@ class Group:
     description: str
     repo: tuple[str, ...]
     aur: tuple[str, ...]
+    # Command-line tools installed with `uv tool install` (no sudo, no AUR).
+    uv: tuple[str, ...]
     optional: bool
 
 
@@ -91,6 +93,7 @@ def load(path: Path = MANIFEST) -> Manifest:
             description=g.get("description", ""),
             repo=tuple(g.get("repo", [])),
             aur=tuple(g.get("aur", [])),
+            uv=tuple(g.get("uv", [])),
             optional=bool(g.get("optional", False)),
         )
         for name, g in data.get("packages", {}).items()

@@ -3,7 +3,7 @@
 Each major version of droid takes the next Android dessert as its codename,
 in Android's order: 1.x is Cupcake, 2.x will be Donut, then Eclair, Froyo,
 and so on. Minor and patch releases keep their major version's codename. The
-version and codename live in [`droid.toml`](droid.toml).
+version and codename live in [`droid.toml`](https://github.com/mmaachado/droid/blob/master/droid.toml).
 
 ## 1.x Cupcake
 

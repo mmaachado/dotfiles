@@ -1,0 +1,85 @@
+site_name: droid
+site_description: A Plasma-based Quickshell desktop, with Android's look.
+site_url: https://mmaachado.github.io/droid/
+repo_url: https://github.com/mmaachado/droid
+repo_name: mmaachado/droid
+edit_uri: edit/master/docs/
+copyright: droid is MIT licensed. The Android robot is CC BY 3.0, by Google.
+
+theme:
+  name: material
+  logo: assets/droid-head_flat.png
+  favicon: assets/droid-head_flat.png
+  font:
+    text: Google Sans Flex
+    code: Google Sans Code
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Dark theme
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Light theme
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+  icon:
+    repo: material/github
+
+extra_css:
+  - stylesheets/droid.css
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.keys
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      base_path: ["."]
+      check_paths: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+nav:
+  - Home: index.md
+  - User guide:
+      - Install: user/install.md
+      - First run: user/first-run.md
+      - Settings: user/settings.md
+      - Keyboard shortcuts: user/keybindings.md
+      - Troubleshooting: user/troubleshooting.md
+  - Developer guide:
+      - Architecture: dev/architecture.md
+      - Repository layout: dev/repo.md
+      - Tooling: dev/tooling.md
+      - Kotlin apps: dev/kotlin-apps.md
+      - QML notes: dev/qml-notes.md
+      - Releasing: dev/releasing.md
+  - Releases: releases.md
+  - Brand: brand.md
+  - Roadmap: roadmap.md
