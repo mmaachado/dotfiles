@@ -9,7 +9,7 @@ Material 3, so they look like Android apps. They live in `apps/`, a Gradle
 | --- | --- |
 | `common` | `DroidTheme` (KShell's current Material colours from `~/.local/state/kshell/scheme.json`, and Google Sans) and `KShell` (IPC and settings) |
 | `markup` | droid Markup, the screenshot editor (`droid-markup <image>`) |
-| `phone` | Phone mirroring front end for scrcpy *(coming)* |
+| `phone` | droid Phone, mirroring and file transfer through scrcpy and adb (`droid-phone`) |
 
 ```sh
 just apps                 # ./gradlew build in apps/: compile and test
