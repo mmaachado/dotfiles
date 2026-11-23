@@ -22,6 +22,7 @@ and a dot for unread notifications.
 ## Tray
 
 - **Status icons**: Ethernet, Wi-Fi, Bluetooth, sound, battery and energy mode.
+- **AI usage**: the ring beside the tray (see [AI usage](ai-usage.md)).
 - **App icons**: hide tray icons you don't want; *Show again* brings them back.
 
 ## Dock
