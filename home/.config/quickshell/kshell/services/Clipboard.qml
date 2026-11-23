@@ -5,11 +5,12 @@ import Quickshell
 import Quickshell.Io
 
 // Clipboard history, kept by `kshelld clipboard` (ext-data-control): text
-// copies, newest first, with pins. Password managers' copies are skipped.
+// and image copies, newest first, with pins. Password managers' copies are
+// skipped.
 Singleton {
     id: root
 
-    // [{id, text, pinned, time}]
+    // [{id, kind: "text" | "image", text, path, width, height, pinned, time}]
     property var history: []
 
     function send(cmd: string): void {

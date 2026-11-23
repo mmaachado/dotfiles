@@ -4,28 +4,30 @@ import qs.components
 import qs.config
 import qs.services
 
-// Clipboard history (Meta+V). Type to filter, ↑/↓ to select, Enter or a click
-// to copy it back, Delete to forget it, right-click to pin, Esc to close.
+// Clipboard history (Meta+V), laid out like Windows 11's: cards for every
+// copy, text or image, with pinned ones on top. Type to search, ↑/↓ to
+// move, Enter or a click to copy back, Ctrl+P to pin, Delete to forget,
+// Esc to close. Each card has pin and delete buttons.
 Item {
     id: root
 
     property bool open
-    readonly property int rowHeight: 58
-    readonly property int maxRows: 7
+    readonly property int maxHeight: 520
     readonly property var results: {
         const q = input.text.trim().toLowerCase();
-        const h = Clipboard.history.filter(e => !q || e.text.toLowerCase().includes(q));
-        // Pinned first, otherwise newest first.
+        // Images have no text to search; they show only when not searching.
+        const h = Clipboard.history.filter(e => !q || (e.kind !== "image" && e.text.toLowerCase().includes(q)));
         return h.filter(e => e.pinned).concat(h.filter(e => !e.pinned));
     }
 
-    implicitWidth: 620
-    implicitHeight: list.height + search.height + 10
+    implicitWidth: 560
+    implicitHeight: header.height + search.height + list.height + 24
 
     onOpenChanged: {
         if (open) {
             input.text = "";
             list.currentIndex = 0;
+            list.positionViewAtBeginning();
             input.forceActiveFocus();
         } else {
             // Don't keep keyboard focus while hidden: Qt crashes tearing down
@@ -47,110 +49,53 @@ Item {
             : s < 86400 ? `${Math.floor(s / 3600)} h ago` : `${Math.floor(s / 86400)} d ago`;
     }
 
-    ListView {
-        id: list
+    function url(path: string): string {
+        return "file://" + path.split("/").map(encodeURIComponent).join("/");
+    }
+
+    // ── Header ───────────────────────────────────────────────────────
+    Item {
+        id: header
         width: parent.width
-        height: Math.max(1, Math.min(count, root.maxRows)) * root.rowHeight
-        clip: true
-        model: ScriptModel {
-            values: root.results
-            objectProp: "id"
-        }
-        verticalLayoutDirection: ListView.BottomToTop
-        highlightMoveDuration: Appearance.anim.fast
-        highlight: Rectangle {
-            radius: Appearance.sizes.radius
-            color: Appearance.colors.primaryContainer
-        }
-
-        Behavior on height {
-            NumberAnimation { duration: Appearance.anim.normal; easing.type: Easing.OutCubic }
-        }
-
-        delegate: Item {
-            id: row
-            required property var modelData
-            required property int index
-            readonly property bool current: ListView.isCurrentItem // see Launcher.qml
-            readonly property color ink: current ? Appearance.colors.onPrimaryContainer : Appearance.colors.text
-
-            width: list.width
-            height: root.rowHeight
-
-            Icon {
-                id: kindIcon
-                anchors.left: parent.left
-                anchors.leftMargin: 14
-                anchors.verticalCenter: parent.verticalCenter
-                name: /^https?:\/\//.test(row.modelData.text.trim()) ? "link-symbolic" : "edit-paste-symbolic"
-                size: 20
-                color: Qt.alpha(row.ink, 0.7)
-            }
-
-            Column {
-                anchors.left: kindIcon.right
-                anchors.leftMargin: 14
-                anchors.right: pinIcon.left
-                anchors.rightMargin: 12
-                anchors.verticalCenter: parent.verticalCenter
-
-                StyledText {
-                    width: parent.width
-                    // One line: collapse whitespace so multi-line copies still read.
-                    text: row.modelData.text.replace(/\s+/g, " ").trim()
-                    color: row.ink
-                    maximumLineCount: 1
-                }
-                StyledText {
-                    width: parent.width
-                    readonly property int lines: row.modelData.text.split("\n").length
-                    text: root.ago(row.modelData.time) + (lines > 1 ? ` · ${lines} lines` : "")
-                        + ` · ${row.modelData.text.length} chars`
-                    color: Qt.alpha(row.ink, 0.7)
-                    font.pointSize: Appearance.font.small
-                }
-            }
-
-            Icon {
-                id: pinIcon
-                anchors.right: parent.right
-                anchors.rightMargin: 16
-                anchors.verticalCenter: parent.verticalCenter
-                name: "view-pin-symbolic"
-                size: 16
-                color: Appearance.colors.primary
-                visible: row.modelData.pinned
-            }
-
-            StateLayer {
-                radius: Appearance.sizes.radius
-                acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-                onClicked: mouse => {
-                    if (mouse.button === Qt.RightButton)
-                        Clipboard.pin(row.modelData.id);
-                    else if (mouse.button === Qt.MiddleButton)
-                        Clipboard.remove(row.modelData.id);
-                    else
-                        root.pick(row.modelData);
-                }
-                onContainsMouseChanged: if (containsMouse) list.currentIndex = row.index
-            }
-        }
+        height: 36
 
         StyledText {
-            anchors.centerIn: parent
-            visible: list.count === 0
-            text: Clipboard.history.length ? "Nothing matches" : "Nothing copied yet"
-            color: Appearance.colors.textDim
+            anchors.left: parent.left
+            anchors.leftMargin: 4
+            anchors.verticalCenter: parent.verticalCenter
+            text: "Clipboard"
+            font.pointSize: Appearance.font.large
+            font.bold: true
+        }
+
+        Rectangle {
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            visible: Clipboard.history.some(e => !e.pinned)
+            width: clearLabel.implicitWidth + 24
+            height: 30
+            radius: height / 2
+            color: Appearance.colors.surfaceHigh
+
+            StyledText {
+                id: clearLabel
+                anchors.centerIn: parent
+                text: "Clear all"
+                font.pointSize: Appearance.font.small
+            }
+            StateLayer {
+                onClicked: Clipboard.clear()
+            }
         }
     }
 
+    // ── Search ───────────────────────────────────────────────────────
     Rectangle {
         id: search
-        anchors.top: list.bottom
-        anchors.topMargin: 10
+        anchors.top: header.bottom
+        anchors.topMargin: 8
         width: parent.width
-        height: 48
+        height: 44
         radius: height / 2
         color: Appearance.colors.surfaceHigh
 
@@ -159,8 +104,8 @@ Item {
             anchors.left: parent.left
             anchors.leftMargin: 16
             anchors.verticalCenter: parent.verticalCenter
-            name: "edit-paste-symbolic"
-            size: 18
+            name: "search-symbolic"
+            size: 16
             color: Appearance.colors.textDim
         }
 
@@ -168,51 +113,195 @@ Item {
             id: input
             anchors.left: searchIcon.right
             anchors.leftMargin: 12
-            anchors.right: clearAll.left
-            anchors.rightMargin: 12
+            anchors.right: parent.right
+            anchors.rightMargin: 16
             anchors.verticalCenter: parent.verticalCenter
             color: Appearance.colors.text
             selectionColor: Appearance.colors.primary
             selectedTextColor: Appearance.colors.onPrimary
             font.family: Appearance.font.family
-            font.pointSize: Appearance.font.large
+            font.pointSize: Appearance.font.normal
             clip: true
 
             onTextChanged: list.currentIndex = 0
 
-            Keys.onUpPressed: list.incrementCurrentIndex()
-            Keys.onDownPressed: list.decrementCurrentIndex()
+            Keys.onUpPressed: list.decrementCurrentIndex()
+            Keys.onDownPressed: list.incrementCurrentIndex()
             Keys.onReturnPressed: root.pick(root.results[list.currentIndex])
             Keys.onEnterPressed: root.pick(root.results[list.currentIndex])
             Keys.onEscapePressed: Visibilities.closeAll()
-            Keys.onDeletePressed: event => {
-                // Delete forgets the selected entry once the search is empty
-                // (otherwise it edits the search as usual).
+            Keys.onPressed: event => {
                 const e = root.results[list.currentIndex];
-                if (input.text === "" && e)
+                if (event.key === Qt.Key_P && (event.modifiers & Qt.ControlModifier) && e) {
+                    Clipboard.pin(e.id);
+                    event.accepted = true;
+                } else if (event.key === Qt.Key_Delete && input.text === "" && e) {
+                    // Delete forgets the selected card once the search is
+                    // empty (otherwise it edits the search as usual).
                     Clipboard.remove(e.id);
-                else
-                    event.accepted = false;
+                    event.accepted = true;
+                }
             }
 
             StyledText {
                 anchors.verticalCenter: parent.verticalCenter
                 visible: input.text === ""
-                text: `Search ${Clipboard.history.length} copies…   right-click to pin, Delete to forget`
+                text: `Search ${Clipboard.history.length} copies…`
                 color: Appearance.colors.textFaint
-                font.pointSize: Appearance.font.large
+            }
+        }
+    }
+
+    // ── Cards ────────────────────────────────────────────────────────
+    ListView {
+        id: list
+        anchors.top: search.bottom
+        anchors.topMargin: 12
+        width: parent.width
+        height: Math.max(80, Math.min(contentHeight, root.maxHeight))
+        clip: true
+        spacing: 8
+        boundsBehavior: Flickable.StopAtBounds
+        highlightMoveDuration: Appearance.anim.fast
+        model: ScriptModel {
+            values: root.results
+            objectProp: "id"
+        }
+
+        delegate: Item {
+            id: slot
+            required property var modelData
+            required property int index
+            readonly property bool current: ListView.isCurrentItem // see Launcher.qml
+            // "Pinned" / "Recent" above the first card of each group, when
+            // anything is pinned.
+            readonly property bool anyPinned: root.results.length > 0 && root.results[0].pinned
+            readonly property bool firstOfGroup: index === 0 || root.results[index - 1]?.pinned !== modelData.pinned
+            readonly property string heading: anyPinned && firstOfGroup ? (modelData.pinned ? "Pinned" : "Recent") : ""
+
+            width: list.width
+            height: headingText.height + card.height
+
+            StyledText {
+                id: headingText
+                width: parent.width
+                height: slot.heading ? implicitHeight + 6 : 0
+                visible: slot.heading !== ""
+                leftPadding: 4
+                text: slot.heading
+                color: Appearance.colors.textDim
+                font.pointSize: Appearance.font.small
+                font.bold: true
+            }
+
+            Rectangle {
+                id: card
+                readonly property var modelData: slot.modelData
+                readonly property int index: slot.index
+                readonly property bool current: slot.current
+                readonly property bool image: modelData.kind === "image"
+
+                y: headingText.height
+                width: list.width
+                height: (image ? thumb.height + meta.height + 22 : textBox.height + meta.height + 26)
+                radius: Appearance.sizes.radius
+                color: current ? Appearance.colors.primaryContainer : Appearance.colors.surface
+                border.width: current ? 0 : 1
+                border.color: Qt.alpha(Appearance.colors.outline, 0.35)
+
+                StateLayer {
+                    radius: card.radius
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    onClicked: mouse => {
+                        if (mouse.button === Qt.RightButton)
+                            Clipboard.pin(card.modelData.id);
+                        else
+                            root.pick(card.modelData);
+                    }
+                    onContainsMouseChanged: if (containsMouse) list.currentIndex = card.index
+                }
+
+                // Text: up to three lines.
+                StyledText {
+                    id: textBox
+                    visible: !card.image
+                    x: 14
+                    y: 12
+                    width: parent.width - 28 - actions.width
+                    text: card.image ? "" : card.modelData.text.trim()
+                    color: card.current ? Appearance.colors.onPrimaryContainer : Appearance.colors.text
+                    wrapMode: Text.WrapAnywhere
+                    maximumLineCount: 3
+                    elide: Text.ElideRight
+                }
+
+                // Image: a thumbnail.
+                Rectangle {
+                    id: thumb
+                    visible: card.image
+                    x: 12
+                    y: 10
+                    width: Math.min(parent.width - 24 - actions.width,
+                        card.image ? 140 * (card.modelData.width ?? 1) / Math.max(1, card.modelData.height ?? 1) : 0)
+                    height: card.image ? 140 : 0
+                    radius: Appearance.sizes.radiusSmall
+                    color: Appearance.colors.surfaceHigh
+                    clip: true
+
+                    Image {
+                        anchors.fill: parent
+                        source: card.image && card.modelData.path ? root.url(card.modelData.path) : ""
+                        sourceSize.height: 280
+                        fillMode: Image.PreserveAspectFit
+                        asynchronous: true
+                    }
+                }
+
+                StyledText {
+                    id: meta
+                    x: 14
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 8
+                    readonly property int lines: card.image ? 0 : card.modelData.text.split("\n").length
+                    text: root.ago(card.modelData.time)
+                        + (card.image ? ` · ${card.modelData.width} × ${card.modelData.height}`
+                            : (lines > 1 ? ` · ${lines} lines` : ""))
+                    color: Qt.alpha(card.current ? Appearance.colors.onPrimaryContainer : Appearance.colors.text, 0.65)
+                    font.pointSize: Appearance.font.small
+                }
+
+                // Pin and delete, top right; the pin stays visible when pinned.
+                Row {
+                    id: actions
+                    anchors.top: parent.top
+                    anchors.right: parent.right
+                    anchors.margins: 6
+                    spacing: 2
+
+                    IconButton {
+                        icon: "view-pin-symbolic"
+                        iconSize: 15
+                        active: card.modelData.pinned
+                        opacity: card.modelData.pinned || card.current ? 1 : 0
+                        tooltip: card.modelData.pinned ? "Unpin" : "Pin"
+                        onClicked: Clipboard.pin(card.modelData.id)
+                    }
+                    IconButton {
+                        icon: "edit-delete-symbolic"
+                        iconSize: 15
+                        opacity: card.current ? 1 : 0
+                        tooltip: "Delete"
+                        onClicked: Clipboard.remove(card.modelData.id)
+                    }
+                }
             }
         }
 
-        IconButton {
-            id: clearAll
-            anchors.right: parent.right
-            anchors.rightMargin: 8
-            anchors.verticalCenter: parent.verticalCenter
-            icon: "edit-clear-history-symbolic"
-            iconSize: 16
-            tooltip: "Clear (keeps pinned)"
-            onClicked: Clipboard.clear()
+        StyledText {
+            anchors.centerIn: parent
+            visible: list.count === 0
+            text: Clipboard.history.length ? "Nothing matches" : "Nothing copied yet"
+            color: Appearance.colors.textDim
         }
     }
 }
