@@ -185,6 +185,7 @@ Scope {
             id: idleRegion
             item: root.showBar ? bar : null
             Region { item: popups }
+            Region { item: captureThumb.visible ? captureThumb : null }
             Region { item: root.showNotch ? island : null }
             Region { item: root.showNotch ? island.edgeItem : null }
         }
@@ -369,6 +370,16 @@ Scope {
                 anchors.verticalCenter: parent.verticalCenter
 
                 OsdView {}
+            }
+
+            // After a screenshot or recording, on the screen being used.
+            CaptureThumb {
+                id: captureThumb
+                active: Bridge.activeScreen === root.modelData.name || root.single
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.rightMargin: root.insetRight + 16
+                anchors.bottomMargin: root.insetBottom + 16
             }
 
             Popups {
