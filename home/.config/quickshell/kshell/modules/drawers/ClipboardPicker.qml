@@ -8,7 +8,7 @@ import qs.services
 // copy, text or image, with pinned ones on top. Type to search, ↑/↓ to
 // move, Enter or a click to copy back, Ctrl+P to pin, Delete to forget,
 // Esc to close. Each card has pin, send-to-phone (KDE Connect) and delete
-// buttons.
+// buttons; right-click one for the same actions in a menu.
 Item {
     id: root
 
@@ -35,6 +35,23 @@ Item {
             // a focused text input when the shell exits.
             input.focus = false;
         }
+    }
+
+    ContextMenu {
+        id: menu
+    }
+
+    function showMenu(card: Item, e: var, x: real, y: real): void {
+        const items = [
+            { text: "Copy", shortcut: "Enter", action: () => root.pick(e) },
+            { text: e.pinned ? "Unpin" : "Pin", shortcut: "Ctrl+P", action: () => Clipboard.pin(e.id) }
+        ];
+        if (KdeConnect.available)
+            items.push({ text: "Send to Phone",
+                         action: () => e.kind === "image" ? KdeConnect.shareFile(e.path) : KdeConnect.shareText(e.text) });
+        items.push({ separator: true }, { text: "Delete", shortcut: "Delete", action: () => Clipboard.remove(e.id) });
+        menu.items = items;
+        menu.popup(card, x, y);
     }
 
     function pick(entry: var): void {
@@ -215,7 +232,7 @@ Item {
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
                     onClicked: mouse => {
                         if (mouse.button === Qt.RightButton)
-                            Clipboard.pin(card.modelData.id);
+                            root.showMenu(card, card.modelData, mouse.x, mouse.y);
                         else
                             root.pick(card.modelData);
                     }

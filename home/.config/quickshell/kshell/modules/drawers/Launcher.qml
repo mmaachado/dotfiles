@@ -6,7 +6,7 @@ import qs.services
 
 // App launcher. Type to search, ↑/↓ to select, Enter to launch,
 // Tab to hand the query over to KRunner, Esc to close. Right-click an app
-// to pin/unpin it in the bar.
+// for a menu (open, pin or unpin it in the bar).
 Item {
     id: root
 
@@ -28,6 +28,10 @@ Item {
             // a focused text input when the shell exits.
             input.focus = false;
         }
+    }
+
+    ContextMenu {
+        id: menu
     }
 
     function launch(app: DesktopEntry): void {
@@ -145,8 +149,14 @@ Item {
                 radius: Appearance.sizes.radius
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
                 onClicked: mouse => {
-                    if (mouse.button === Qt.RightButton)
-                        Dock.togglePin(row.modelData.id);
+                    if (mouse.button === Qt.RightButton) {
+                        const app = row.modelData;
+                        menu.items = [
+                            { text: "Open", shortcut: "Enter", action: () => root.launch(app) },
+                            { text: Dock.isPinned(app.id) ? "Unpin from Bar" : "Pin to Bar", action: () => Dock.togglePin(app.id) }
+                        ];
+                        menu.popup(row, mouse.x, mouse.y);
+                    }
                     else
                         root.launch(row.modelData);
                 }
