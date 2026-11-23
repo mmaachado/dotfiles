@@ -4,9 +4,10 @@
 
 - **Project tooling**: just, git hooks, commit checks, the release script,
   this portal *(in progress)*.
-- **Screenshots like macOS**: ++meta+shift+3++, ++meta+shift+4++ and
-  ++meta+shift+5++ with a capture toolbar, screen recording, a floating
-  thumbnail, and **droid Markup** (Kotlin) for annotations.
+- **Screenshots like macOS** *(in review)*: ++meta+shift+3++,
+  ++meta+shift+4++ and ++meta+shift+5++ with a capture toolbar, screen
+  recording, a floating thumbnail, and **droid Markup** (Kotlin) for
+  annotations.
 - **Clipboard like Windows 11**: images in the history, pinned items, sync
   with your phone through KDE Connect.
 - **Phone mirroring like macOS**: **droid Phone** (Kotlin), an Android

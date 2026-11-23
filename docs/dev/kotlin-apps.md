@@ -8,11 +8,12 @@ Material 3, so they look like Android apps. They live in `apps/`, a Gradle
 | Module | What |
 | --- | --- |
 | `common` | `DroidTheme` (KShell's current Material colours from `~/.local/state/kshell/scheme.json`, and Google Sans) and `KShell` (IPC and settings) |
-| `markup` | Screenshot editor *(coming)* |
+| `markup` | droid Markup, the screenshot editor (`droid-markup <image>`) |
 | `phone` | Phone mirroring front end for scrcpy *(coming)* |
 
 ```sh
 just apps                 # ./gradlew build in apps/: compile and test
+just apps-install         # install them into ~/.local/share/droid/apps, launchers in ~/.local/bin
 ```
 
 The apps compile for JDK 21. Gradle downloads it if it isn't installed. The
