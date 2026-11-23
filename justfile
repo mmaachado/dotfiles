@@ -62,3 +62,9 @@ restart:
 # Warnings and errors from KShell's latest log
 log:
     qs log "$(ls -t /run/user/$(id -u)/quickshell/by-id/*/log.qslog | head -1)" | grep -iE 'warn|error|caused' || echo "No warnings or errors."
+
+# ── Git ─────────────────────────────────────────────────────────────
+
+# Check a commit message file, or `--range A..B` (Conventional Commits)
+commit-check *args:
+    kotlin scripts/commit-msg.main.kts {{args}}
