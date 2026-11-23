@@ -14,7 +14,9 @@ Row {
     id: root
 
     property bool open
-    readonly property int sectionHeight: quick.hasBattery ? 476 : 416
+    // Tall enough for Quick Settings, which grows with a slider per
+    // monitor (and a battery card on laptops).
+    readonly property int sectionHeight: Math.max(416, Math.ceil(quick.contentHeight) + 32)
 
     spacing: 14
 

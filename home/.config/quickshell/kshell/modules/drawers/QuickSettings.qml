@@ -26,6 +26,8 @@ Item {
     readonly property var adapter: Bluetooth.defaultAdapter
     readonly property var battery: UPower.displayDevice
     readonly property bool hasBattery: battery?.isLaptopBattery ?? false
+    // Height of the main page's content, so the dashboard can fit it.
+    readonly property real contentHeight: main.implicitHeight
     readonly property var theme: Themes.list.find(t => t.id === Themes.target) ?? null
 
     Component.onCompleted: User.users++
