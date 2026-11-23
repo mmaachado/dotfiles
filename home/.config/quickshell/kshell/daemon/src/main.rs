@@ -12,6 +12,7 @@
 mod bridge;
 mod brightness;
 mod clipboard;
+mod menus;
 mod osd;
 mod paths;
 mod scheme;
