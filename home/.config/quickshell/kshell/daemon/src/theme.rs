@@ -511,11 +511,10 @@ async fn apply(t: &Theme) -> Result<()> {
     let name = scheme_name(t);
     std::fs::write(schemes.join(format!("{name}.colors")), colour_scheme(t))?;
     exec(&["plasma-apply-colorscheme", &name]);
-    // GTK's menus, which the colour scheme doesn't shape
-    menus::install_gtk(
-        &home.join(".config"),
-        &menus::Colours::new(t.palette(), t.dark),
-    )?;
+    // GTK's and Firefox's menus, which the colour scheme doesn't shape
+    let menu_colours = menus::Colours::new(t.palette(), t.dark);
+    menus::install_gtk(&home.join(".config"), &menu_colours)?;
+    menus::install_firefox(&home, &menu_colours)?;
 
     // 2. window decoration: MacVentura aurorae if installed, else Breeze
     let aurorae = [
@@ -661,6 +660,10 @@ pub async fn run(args: &[String]) -> Result<()> {
             for (name, css) in menus::gtk_files(&colours) {
                 std::fs::write(dir.join(name), css)?;
             }
+            std::fs::write(
+                dir.join("firefox-kshell-menus.css"),
+                menus::firefox_css(&colours),
+            )?;
             Ok(())
         }
         [cmd] if cmd == "current" => {
